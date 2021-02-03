@@ -257,10 +257,12 @@ class AuthenticationController {
 
       if (this.Authentication.isAuthenticated()) {
         await this.postLoginSteps();
+      } else {
+        document.location.href = this.OAuthLoginURI;
+        return;
       }
-      this.state.loginInProgress = false;
 
-      await this.authEnabledFlowAsync();
+      this.state.loginInProgress = false;
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve public settings');
     }
