@@ -397,6 +397,7 @@ type (
 		AuthorizationURI     string `json:"AuthorizationURI"`
 		ResourceURI          string `json:"ResourceURI"`
 		RedirectURI          string `json:"RedirectURI"`
+		LogoutURI            string `json:"LogoutURI"`
 		UserIdentifier       string `json:"UserIdentifier"`
 		Scopes               string `json:"Scopes"`
 		OAuthAutoCreateUsers bool   `json:"OAuthAutoCreateUsers"`
