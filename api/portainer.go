@@ -404,6 +404,11 @@ type (
 		DefaultTeamID        TeamID `json:"DefaultTeamID"`
 	}
 
+	OAuthUserData struct {
+		Username   string `json:"Username"`
+		OAuthToken string `json:"OAuthToken"`
+	}
+
 	// Pair defines a key/value string pair
 	Pair struct {
 		Name  string `json:"name"`
@@ -709,9 +714,10 @@ type (
 
 	// TokenData represents the data embedded in a JWT token
 	TokenData struct {
-		ID       UserID
-		Username string
-		Role     UserRole
+		ID         UserID
+		Username   string
+		Role       UserRole
+		OAuthToken string
 	}
 
 	// TunnelDetails represents information associated to a tunnel
@@ -730,10 +736,11 @@ type (
 
 	// User represents a user account
 	User struct {
-		ID       UserID   `json:"Id"`
-		Username string   `json:"Username"`
-		Password string   `json:"Password,omitempty"`
-		Role     UserRole `json:"Role"`
+		ID         UserID   `json:"Id"`
+		Username   string   `json:"Username"`
+		Password   string   `json:"Password,omitempty"`
+		Role       UserRole `json:"Role"`
+		OAuthToken string   `json:"OAuthToken"`
 
 		// Deprecated fields
 		// Deprecated in DBVersion == 25
@@ -946,6 +953,7 @@ type (
 
 	// JWTService represents a service for managing JWT tokens
 	JWTService interface {
+		AddTokenToBlacklist(token string)
 		GenerateToken(data *TokenData) (string, error)
 		ParseAndVerifyToken(token string) (*TokenData, error)
 		SetUserSessionDuration(userSessionDuration time.Duration)
@@ -977,7 +985,7 @@ type (
 
 	// OAuthService represents a service used to authenticate users using OAuth
 	OAuthService interface {
-		Authenticate(code string, configuration *OAuthSettings) (string, error)
+		Authenticate(code string, configuration *OAuthSettings) (OAuthUserData, error)
 	}
 
 	// RegistryService represents a service for managing registry data

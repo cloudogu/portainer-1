@@ -15,6 +15,7 @@ angular.module('portainer.app').factory('Authentication', [
 
     service.init = init;
     service.OAuthLogin = OAuthLogin;
+    service.OAuthIsTokenValid = OAuthIsTokenValid;
     service.login = login;
     service.logout = logout;
     service.isAuthenticated = isAuthenticated;
@@ -59,6 +60,19 @@ angular.module('portainer.app').factory('Authentication', [
 
     function OAuthLogin(code) {
       return $async(OAuthLoginAsync, code);
+    }
+
+    async function OAuthIsTokenValid() {
+      var jwt = LocalStorage.getJWT();
+      if (jwt) {
+        return await OAuth.verifyToken({ token: jwt })
+          .$promise.then(function (response) {
+            return response && response.valid;
+          })
+          .catch(function () {
+            return false;
+          });
+      }
     }
 
     async function loginAsync(username, password) {
