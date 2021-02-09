@@ -398,6 +398,7 @@ type (
 		ResourceURI          string `json:"ResourceURI"`
 		RedirectURI          string `json:"RedirectURI"`
 		LogoutURI            string `json:"LogoutURI"`
+		AdminGroup           string `json:"AdminGroup"`
 		UserIdentifier       string `json:"UserIdentifier"`
 		Scopes               string `json:"Scopes"`
 		OAuthAutoCreateUsers bool   `json:"OAuthAutoCreateUsers"`
@@ -405,8 +406,9 @@ type (
 	}
 
 	OAuthUserData struct {
-		Username   string `json:"Username"`
-		OAuthToken string `json:"OAuthToken"`
+		Username   string   `json:"Username"`
+		OAuthToken string   `json:"OAuthToken"`
+		Teams      []string `json:"Teams"`
 	}
 
 	// Pair defines a key/value string pair
