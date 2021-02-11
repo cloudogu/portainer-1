@@ -76,18 +76,60 @@ func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portai
 	}
 
 	if user == nil {
-		user = &portainer.User{
-			Username: userData.Username,
-			Role:     portainer.StandardUserRole,
-		}
-
-		err = handler.DataStore.User().CreateUser(user)
+		user, err = handler.createUser(userData)
 		if err != nil {
-			return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist user inside the database", err}
+			return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the new user inside the database", err}
 		}
 	}
 
 	// Get new groups from profile
+	newTeams, handlerErr := handler.getUserGroups(userData)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Get old groups from database
+	oldTeams, err := handler.DataStore.TeamMembership().TeamMembershipsByUserID(user.ID)
+	if err != nil {
+		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve team subscriptions from the database", err}
+	}
+
+	// Remove old groups that are not part of the new groups
+	handlerErr = handler.removeUserFromOldGroups(&oldTeams, newTeams)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Add new groups that are not part of the old groups
+	handlerErr = handler.addUserToNewGroups(user, &oldTeams, newTeams)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Handle admin group
+	handlerErr = handler.checkAdminPrivileges(user, userData, settings)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	user.OAuthToken = userData.OAuthToken
+	return handler.writeToken(w, user)
+}
+
+func (handler *Handler) createUser(userData *portainer.OAuthUserData) (*portainer.User, error) {
+	user := &portainer.User{
+		Username: userData.Username,
+		Role:     portainer.StandardUserRole,
+	}
+
+	err := handler.DataStore.User().CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (handler *Handler) getUserGroups(userData *portainer.OAuthUserData) (*[]portainer.Team, *httperror.HandlerError) {
 	var newTeams []portainer.Team
 	for _, teamName := range userData.Teams {
 		team, err := handler.DataStore.Team().TeamByName(teamName)
@@ -98,24 +140,20 @@ func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portai
 
 			err = handler.DataStore.Team().CreateTeam(team)
 			if err != nil {
-				return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the team inside the database", err}
+				return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the team inside the database", err}
 			}
 		} else if err != nil {
-			return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve the team from the database", err}
+			return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve the team from the database", err}
 		}
 		newTeams = append(newTeams, *team)
 	}
+	return &newTeams, nil
+}
 
-	// Get old groups from database
-	oldTeams, err := handler.DataStore.TeamMembership().TeamMembershipsByUserID(user.ID)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve team subscriptions from the database", err}
-	}
-
-	// Remove old groups that are not part of the new groups
-	for _, oldTeam := range oldTeams {
+func (handler *Handler) removeUserFromOldGroups(oldTeams *[]portainer.TeamMembership, newTeams *[]portainer.Team) *httperror.HandlerError {
+	for _, oldTeam := range *oldTeams {
 		var removeOldGroup = true
-		for _, newTeam := range newTeams {
+		for _, newTeam := range *newTeams {
 			if oldTeam.TeamID == newTeam.ID {
 				removeOldGroup = false
 				break
@@ -123,17 +161,19 @@ func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portai
 		}
 
 		if removeOldGroup {
-			err = handler.DataStore.TeamMembership().DeleteTeamMembership(oldTeam.ID)
+			err := handler.DataStore.TeamMembership().DeleteTeamMembership(oldTeam.ID)
 			if err != nil {
 				return &httperror.HandlerError{http.StatusInternalServerError, "Unable to delete team subscriptions from the database", err}
 			}
 		}
 	}
+	return nil
+}
 
-	// Add new groups that are not part of the old groups
-	for _, newTeam := range newTeams {
+func (handler *Handler) addUserToNewGroups(user *portainer.User, oldTeams *[]portainer.TeamMembership, newTeams *[]portainer.Team) *httperror.HandlerError {
+	for _, newTeam := range *newTeams {
 		var addToGroup = true
-		for _, oldTeam := range oldTeams {
+		for _, oldTeam := range *oldTeams {
 			if oldTeam.TeamID == newTeam.ID {
 				addToGroup = false
 			}
@@ -146,14 +186,16 @@ func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portai
 				Role:   portainer.TeamMember,
 			}
 
-			err = handler.DataStore.TeamMembership().CreateTeamMembership(membership)
+			err := handler.DataStore.TeamMembership().CreateTeamMembership(membership)
 			if err != nil {
 				return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist team membership inside the database", err}
 			}
 		}
 	}
+	return nil
+}
 
-	// Handle admin group
+func (handler *Handler) checkAdminPrivileges(user *portainer.User, userData *portainer.OAuthUserData, settings *portainer.Settings) *httperror.HandlerError {
 	user.Role = portainer.StandardUserRole
 	for _, team := range userData.Teams {
 		if team == settings.OAuthSettings.AdminGroup {
@@ -161,11 +203,9 @@ func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portai
 		}
 	}
 	// Update user privileges
-	err = handler.DataStore.User().UpdateUser(user.ID, user)
+	err := handler.DataStore.User().UpdateUser(user.ID, user)
 	if err != nil {
 		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to update the user with necessary privileges", err}
 	}
-
-	user.OAuthToken = userData.OAuthToken
-	return handler.writeToken(w, user)
+	return nil
 }
