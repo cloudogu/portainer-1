@@ -21,7 +21,7 @@ func NewService() *Service {
 	return &Service{}
 }
 
-type cesUserData struct {
+type ldapUserData struct {
 	ID         string `json:"id"`
 	Attributes []struct {
 		Username    string   `json:"username,omitempty"`
@@ -120,7 +120,7 @@ func getUserData(token string, configuration *portainer.OAuthSettings) (portaine
 		return userData, nil
 	}
 
-	var data cesUserData
+	var data ldapUserData
 	if err = json.Unmarshal(body, &data); err != nil {
 		return portainer.OAuthUserData{}, err
 	}

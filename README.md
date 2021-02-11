@@ -17,11 +17,7 @@
 This repository does contain an altered version of the original source code distributed by Portainer.
 For users, interested in the original source code of Portainer visit https://github.com/portainer/portainer
 
-## Current Version & Updating Portainer
-
-The current develop-Branch mirrors the release of tag **2.1.0**.
-Do not merge the develop-Branch from Portainer into our develop-Branch.
-To update Portainer merge the next latest release tag.
+---
 
 For more information how to build and to update visit the [Portainer-Dogu](https://github.com/cloudogu/portainer) repository.## Licensing
 

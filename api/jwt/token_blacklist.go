@@ -5,21 +5,21 @@ import (
 	"time"
 )
 
-type blacklistToken struct {
+type blocklistToken struct {
 	token        string
 	creationTime int64
 }
 
-type BlacklistTokenMap struct {
-	blacklist map[string]*blacklistToken
+type BlocklistTokenMap struct {
+	blocklist map[string]*blocklistToken
 	lock      sync.Mutex
 	ttl       int64
 }
 
-// New Creates a new blacklist for invalid tokens. The timeout for the element is given as integer
-func New(maxTimeToLive int, interval time.Duration) (m *BlacklistTokenMap) {
-	m = &BlacklistTokenMap{
-		blacklist: make(map[string]*blacklistToken),
+// New Creates a new blocklist for invalid tokens. The timeout for the element is given as time.Duration
+func NewBlocklistTokenMap(maxTimeToLive int, interval time.Duration) (m *BlocklistTokenMap) {
+	m = &BlocklistTokenMap{
+		blocklist: make(map[string]*blocklistToken),
 		ttl:       int64(maxTimeToLive),
 	}
 	ticker := time.NewTicker(interval)
@@ -39,30 +39,30 @@ func New(maxTimeToLive int, interval time.Duration) (m *BlacklistTokenMap) {
 }
 
 // UpdateList updates the list and removes old elements
-func (m *BlacklistTokenMap) UpdateList() {
+func (m *BlocklistTokenMap) UpdateList() {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	for token, mapToken := range m.blacklist {
+	for token, mapToken := range m.blocklist {
 		if m.IsExpired(mapToken) {
-			delete(m.blacklist, token)
+			delete(m.blocklist, token)
 		}
 	}
 }
 
-// Puts an element into the blacklist
-func (m *BlacklistTokenMap) Put(token string) {
+// Puts an element into the blocklist
+func (m *BlocklistTokenMap) Put(token string) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	it := &blacklistToken{
+	it := &blocklistToken{
 		token:        token,
 		creationTime: time.Now().Unix(),
 	}
-	m.blacklist[token] = it
+	m.blocklist[token] = it
 }
 
 // IsBlocked checks whether a certain token is blacklisted. When the requested token is expired it does not count as blocked.
-func (m *BlacklistTokenMap) IsBlocked(token string) bool {
-	mapToken, ok := m.blacklist[token]
+func (m *BlocklistTokenMap) IsBlocked(token string) bool {
+	mapToken, ok := m.blocklist[token]
 	if !ok {
 		return false
 	}
@@ -70,17 +70,17 @@ func (m *BlacklistTokenMap) IsBlocked(token string) bool {
 }
 
 // IsExpired returns true when the token is expired
-func (m *BlacklistTokenMap) IsExpired(mapToken *blacklistToken) bool {
-	return time.Now().Unix()-mapToken.creationTime > m.ttl
+func (m *BlocklistTokenMap) IsExpired(token *blocklistToken) bool {
+	return time.Now().Unix()-token.creationTime > m.ttl
 }
 
 // Remove removes a specific token from the map
-func (m *BlacklistTokenMap) Remove(token string) {
+func (m *BlocklistTokenMap) Remove(token string) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	_, ok := m.blacklist[token]
+	_, ok := m.blocklist[token]
 	if ok {
-		delete(m.blacklist, token)
+		delete(m.blocklist, token)
 	}
 }

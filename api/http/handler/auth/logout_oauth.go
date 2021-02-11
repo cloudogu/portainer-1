@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"errors"
+	"fmt"
 	. "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
 	"io/ioutil"
@@ -35,21 +35,37 @@ func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Re
 
 		token := values.Get("logoutRequest")
 
-		handler.JWTService.AddTokenToBlacklist(token)
+		handler.JWTService.AddTokenToBlocklist(token)
 
 		w.WriteHeader(200)
 		return nil
 	} else {
-		return &HandlerError{http.StatusInternalServerError, "Invalid content type ", err}
+		return &HandlerError{
+			StatusCode: http.StatusInternalServerError,
+			Message:    fmt.Sprintf("Invalid content type %s. Expected \"application/x-www-form-urlencoded\" or \"text/plain\"", content),
+		}
 	}
 }
 
 func (handler *Handler) isJWTTokenNotBlocked(w http.ResponseWriter, r *http.Request) *HandlerError {
-	var token string
+	token, handlerErr := handler.retrieveAuthTokenFromRequest(r)
+	if handlerErr != nil {
+		return handlerErr
+	}
 
+	var err error
+	_, err = handler.JWTService.ParseAndVerifyToken(token)
+	if err != nil {
+		return response.JSON(w, &verifyResponse{Valid: false})
+	}
+
+	return response.JSON(w, &verifyResponse{Valid: true})
+}
+
+func (handler *Handler) retrieveAuthTokenFromRequest(r *http.Request) (string, *HandlerError) {
 	// Optionally, token might be set via the "token" query parameter.
 	// For example, in websocket requests
-	token = r.URL.Query().Get("token")
+	token := r.URL.Query().Get("token")
 
 	// Get token from the Authorization header
 	tokens, ok := r.Header["Authorization"]
@@ -59,15 +75,7 @@ func (handler *Handler) isJWTTokenNotBlocked(w http.ResponseWriter, r *http.Requ
 	}
 
 	if token == "" {
-		return &HandlerError{http.StatusBadRequest, "Missing token", errors.New("Missing token")}
+		return "", &HandlerError{StatusCode: http.StatusBadRequest, Message: "Missing token"}
 	}
-
-	var err error
-	_, err = handler.JWTService.ParseAndVerifyToken(token)
-
-	if err != nil {
-		return response.JSON(w, &verifyResponse{Valid: false})
-	}
-
-	return response.JSON(w, &verifyResponse{Valid: true})
+	return token, nil
 }

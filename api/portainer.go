@@ -955,7 +955,7 @@ type (
 
 	// JWTService represents a service for managing JWT tokens
 	JWTService interface {
-		AddTokenToBlacklist(token string)
+		AddTokenToBlocklist(token string)
 		GenerateToken(data *TokenData) (string, error)
 		ParseAndVerifyToken(token string) (*TokenData, error)
 		SetUserSessionDuration(userSessionDuration time.Duration)

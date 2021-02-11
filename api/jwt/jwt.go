@@ -12,14 +12,14 @@ import (
 
 const (
 	// change settings timeout accordingly, current 24h = 86400
-	blacklistTokenTTL = 86400
+	blocklistTokenTTLinSeconds = 86400
 )
 
 // Service represents a service for managing JWT tokens.
 type Service struct {
 	secret             []byte
 	userSessionTimeout time.Duration
-	tokenBlacklist     *BlacklistTokenMap
+	tokenBlockList     *BlocklistTokenMap
 }
 
 type claims struct {
@@ -47,12 +47,12 @@ func NewService(userSessionDuration string) (*Service, error) {
 		return nil, errSecretGeneration
 	}
 
-	tokenBlacklist := New(blacklistTokenTTL, time.Hour)
+	tokenBlockList := NewBlocklistTokenMap(blocklistTokenTTLinSeconds, time.Hour)
 
 	service := &Service{
 		secret,
 		userSessionTimeout,
-		tokenBlacklist,
+		tokenBlockList,
 	}
 	return service, nil
 }
@@ -98,7 +98,7 @@ func (service *Service) ParseAndVerifyToken(token string) (*portainer.TokenData,
 			}
 
 			if tokenData.OAuthToken != "" {
-				if service.tokenBlacklist.IsBlocked(tokenData.OAuthToken) {
+				if service.tokenBlockList.IsBlocked(tokenData.OAuthToken) {
 					return nil, errInvalidJWTToken
 				}
 			}
@@ -114,7 +114,7 @@ func (service *Service) SetUserSessionDuration(userSessionDuration time.Duration
 	service.userSessionTimeout = userSessionDuration
 }
 
-// AddTokenToBlacklist adds a token identifier to the token list
-func (service *Service) AddTokenToBlacklist(token string) {
-	service.tokenBlacklist.Put(token)
+// AddTokenToBlocklist adds a token identifier to the token list
+func (service *Service) AddTokenToBlocklist(token string) {
+	service.tokenBlockList.Put(token)
 }
