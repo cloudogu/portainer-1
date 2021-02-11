@@ -12,6 +12,11 @@
 **_Portainer_** is meant to be as **simple** to deploy as it is to use. It consists of a single container that can run on any Docker engine (can be deployed as Linux container or a Windows native container, supports other platforms too).
 **_Portainer_** allows you to manage all your Docker resources (containers, images, volumes, networks and more!) It is compatible with the _standalone Docker_ engine and with _Docker Swarm mode_.
 
+## Copyright Notice
+
+This repository does contain an altered version of the original source code distributed by Portainer.
+For users, interested in the original source code of Portainer visit https://github.com/portainer/portainer
+
 ## Current Version & Updating Portainer
 
 The current develop-Branch mirrors the release of tag **2.1.0**.
