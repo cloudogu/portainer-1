@@ -953,9 +953,14 @@ type (
 		ClonePrivateRepositoryWithBasicAuth(repositoryURL, referenceName string, destination, username, password string) error
 	}
 
+	// Blocklist represents a service for blocking specific authentication tokens
+	BlacklistedJWTService interface {
+		JWTService
+		AddTokenToBlocklist(token string)
+	}
+
 	// JWTService represents a service for managing JWT tokens
 	JWTService interface {
-		AddTokenToBlocklist(token string)
 		GenerateToken(data *TokenData) (string, error)
 		ParseAndVerifyToken(token string) (*TokenData, error)
 		SetUserSessionDuration(userSessionDuration time.Duration)

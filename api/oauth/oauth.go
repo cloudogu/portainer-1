@@ -125,7 +125,6 @@ func getUserData(token string, configuration *portainer.OAuthSettings) (portaine
 		return portainer.OAuthUserData{}, err
 	}
 
-	log.Printf("Data: %+v", data)
 	if data.ID != "" {
 		userData := portainer.OAuthUserData{
 			Username:   data.ID,

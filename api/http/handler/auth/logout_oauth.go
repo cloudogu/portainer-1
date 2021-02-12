@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
+	portainer "github.com/portainer/portainer/api"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -35,7 +36,10 @@ func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Re
 
 		token := values.Get("logoutRequest")
 
-		handler.JWTService.AddTokenToBlocklist(token)
+		jwtBlocklist, ok := handler.JWTService.(portainer.BlacklistedJWTService)
+		if ok {
+			jwtBlocklist.AddTokenToBlocklist(token)
+		}
 
 		w.WriteHeader(200)
 		return nil
