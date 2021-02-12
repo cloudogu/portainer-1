@@ -21,16 +21,16 @@ func NewService() *Service {
 	return &Service{}
 }
 
-type ldapUserData struct {
+type authenticationData struct {
 	ID         string `json:"id"`
-	Attributes []struct {
-		Username    string   `json:"username,omitempty"`
-		Cn          string   `json:"cn,omitempty"`
-		Mail        string   `json:"mail,omitempty"`
-		GivenName   string   `json:"givenName,omitempty"`
-		Surname     string   `json:"surname,omitempty"`
-		DisplayName string   `json:"displayName,omitempty"`
-		Groups      []string `json:"groups,omitempty"`
+	Attributes struct {
+		Username    string   `json:"username"`
+		Cn          string   `json:"cn"`
+		Mail        string   `json:"mail"`
+		GivenName   string   `json:"givenName"`
+		Surname     string   `json:"surname"`
+		DisplayName string   `json:"displayName"`
+		Groups      []string `json:"groups"`
 	} `json:"attributes"`
 }
 
@@ -120,22 +120,19 @@ func getUserData(token string, configuration *portainer.OAuthSettings) (portaine
 		return userData, nil
 	}
 
-	var data ldapUserData
+	var data authenticationData
 	if err = json.Unmarshal(body, &data); err != nil {
 		return portainer.OAuthUserData{}, err
 	}
 
+	log.Printf("Data: %+v", data)
 	if data.ID != "" {
-		for _, value := range data.Attributes {
-			if value.Groups != nil {
-				userData := portainer.OAuthUserData{
-					Username:   data.ID,
-					OAuthToken: token,
-					Teams:      value.Groups,
-				}
-				return userData, nil
-			}
+		userData := portainer.OAuthUserData{
+			Username:   data.ID,
+			OAuthToken: token,
+			Teams:      data.Attributes.Groups,
 		}
+		return userData, nil
 	}
 
 	return portainer.OAuthUserData{}, &oauth2.RetrieveError{
