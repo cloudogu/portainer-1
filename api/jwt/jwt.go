@@ -2,26 +2,31 @@ package jwt
 
 import (
 	"errors"
-
-	"github.com/portainer/portainer/api"
-
 	"fmt"
+	"github.com/portainer/portainer/api"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/securecookie"
 )
 
+const (
+	// change settings timeout accordingly, current 24h = 86400
+	blocklistTokenTTLinSeconds = 86400
+)
+
 // Service represents a service for managing JWT tokens.
 type Service struct {
 	secret             []byte
 	userSessionTimeout time.Duration
+	tokenBlockList     *BlocklistTokenMap
 }
 
 type claims struct {
-	UserID   int    `json:"id"`
-	Username string `json:"username"`
-	Role     int    `json:"role"`
+	UserID     int    `json:"id"`
+	Username   string `json:"username"`
+	Role       int    `json:"role"`
+	OAuthToken string `json:"oauth_token"`
 	jwt.StandardClaims
 }
 
@@ -42,9 +47,12 @@ func NewService(userSessionDuration string) (*Service, error) {
 		return nil, errSecretGeneration
 	}
 
+	tokenBlockList := NewBlocklistTokenMap(blocklistTokenTTLinSeconds, time.Hour)
+
 	service := &Service{
 		secret,
 		userSessionTimeout,
+		tokenBlockList,
 	}
 	return service, nil
 }
@@ -53,9 +61,10 @@ func NewService(userSessionDuration string) (*Service, error) {
 func (service *Service) GenerateToken(data *portainer.TokenData) (string, error) {
 	expireToken := time.Now().Add(service.userSessionTimeout).Unix()
 	cl := claims{
-		UserID:   int(data.ID),
-		Username: data.Username,
-		Role:     int(data.Role),
+		UserID:     int(data.ID),
+		Username:   data.Username,
+		Role:       int(data.Role),
+		OAuthToken: data.OAuthToken,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireToken,
 		},
@@ -82,18 +91,30 @@ func (service *Service) ParseAndVerifyToken(token string) (*portainer.TokenData,
 	if err == nil && parsedToken != nil {
 		if cl, ok := parsedToken.Claims.(*claims); ok && parsedToken.Valid {
 			tokenData := &portainer.TokenData{
-				ID:       portainer.UserID(cl.UserID),
-				Username: cl.Username,
-				Role:     portainer.UserRole(cl.Role),
+				ID:         portainer.UserID(cl.UserID),
+				Username:   cl.Username,
+				Role:       portainer.UserRole(cl.Role),
+				OAuthToken: cl.OAuthToken,
 			}
+
+			if tokenData.OAuthToken != "" {
+				if service.tokenBlockList.IsBlocked(tokenData.OAuthToken) {
+					return nil, errInvalidJWTToken
+				}
+			}
+
 			return tokenData, nil
 		}
 	}
-
 	return nil, errInvalidJWTToken
 }
 
 // SetUserSessionDuration sets the user session duration
 func (service *Service) SetUserSessionDuration(userSessionDuration time.Duration) {
 	service.userSessionTimeout = userSessionDuration
+}
+
+// AddTokenToBlocklist adds a token identifier to the token list
+func (service *Service) AddTokenToBlocklist(token string) {
+	service.tokenBlockList.Put(token)
 }

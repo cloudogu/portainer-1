@@ -2,15 +2,14 @@ package auth
 
 import (
 	"errors"
-	"log"
-	"net/http"
-
 	"github.com/asaskevich/govalidator"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/portainer/api"
 	bolterrors "github.com/portainer/portainer/api/bolt/errors"
 	httperrors "github.com/portainer/portainer/api/http/errors"
+	"log"
+	"net/http"
 )
 
 type oauthPayload struct {
@@ -24,21 +23,21 @@ func (payload *oauthPayload) Validate(r *http.Request) error {
 	return nil
 }
 
-func (handler *Handler) authenticateOAuth(code string, settings *portainer.OAuthSettings) (string, error) {
+func (handler *Handler) authenticateOAuth(code string, settings *portainer.OAuthSettings) (portainer.OAuthUserData, error) {
 	if code == "" {
-		return "", errors.New("Invalid OAuth authorization code")
+		return portainer.OAuthUserData{}, errors.New("Invalid OAuth authorization code")
 	}
 
 	if settings == nil {
-		return "", errors.New("Invalid OAuth configuration")
+		return portainer.OAuthUserData{}, errors.New("Invalid OAuth configuration")
 	}
 
-	username, err := handler.OAuthService.Authenticate(code, settings)
+	userData, err := handler.OAuthService.Authenticate(code, settings)
 	if err != nil {
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
-	return username, nil
+	return userData, nil
 }
 
 func (handler *Handler) validateOAuth(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
@@ -57,13 +56,17 @@ func (handler *Handler) validateOAuth(w http.ResponseWriter, r *http.Request) *h
 		return &httperror.HandlerError{http.StatusForbidden, "OAuth authentication is not enabled", errors.New("OAuth authentication is not enabled")}
 	}
 
-	username, err := handler.authenticateOAuth(payload.Code, &settings.OAuthSettings)
+	userData, err := handler.authenticateOAuth(payload.Code, &settings.OAuthSettings)
 	if err != nil {
 		log.Printf("[DEBUG] - OAuth authentication error: %s", err)
 		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to authenticate through OAuth", httperrors.ErrUnauthorized}
 	}
 
-	user, err := handler.DataStore.User().UserByUsername(username)
+	return handler.userProvisioning(w, &userData, settings)
+}
+
+func (handler *Handler) userProvisioning(w http.ResponseWriter, userData *portainer.OAuthUserData, settings *portainer.Settings) *httperror.HandlerError {
+	user, err := handler.DataStore.User().UserByUsername(userData.Username)
 	if err != nil && err != bolterrors.ErrObjectNotFound {
 		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve a user with the specified username from the database", err}
 	}
@@ -73,30 +76,136 @@ func (handler *Handler) validateOAuth(w http.ResponseWriter, r *http.Request) *h
 	}
 
 	if user == nil {
-		user = &portainer.User{
-			Username: username,
-			Role:     portainer.StandardUserRole,
-		}
-
-		err = handler.DataStore.User().CreateUser(user)
+		user, err = handler.createUser(userData)
 		if err != nil {
-			return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist user inside the database", err}
+			return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the new user inside the database", err}
+		}
+	}
+
+	// Get new groups from profile
+	newTeams, handlerErr := handler.getUserGroups(userData)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Get old groups from database
+	oldTeams, err := handler.DataStore.TeamMembership().TeamMembershipsByUserID(user.ID)
+	if err != nil {
+		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve team subscriptions from the database", err}
+	}
+
+	// Remove old groups that are not part of the new groups
+	handlerErr = handler.removeUserFromOldGroups(&oldTeams, newTeams)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Add new groups that are not part of the old groups
+	handlerErr = handler.addUserToNewGroups(user, &oldTeams, newTeams)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	// Handle admin group
+	handlerErr = handler.checkAdminPrivileges(user, userData, settings)
+	if handlerErr != nil {
+		return handlerErr
+	}
+
+	user.OAuthToken = userData.OAuthToken
+	return handler.writeToken(w, user)
+}
+
+func (handler *Handler) createUser(userData *portainer.OAuthUserData) (*portainer.User, error) {
+	user := &portainer.User{
+		Username: userData.Username,
+		Role:     portainer.StandardUserRole,
+	}
+
+	err := handler.DataStore.User().CreateUser(user)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (handler *Handler) getUserGroups(userData *portainer.OAuthUserData) (*[]portainer.Team, *httperror.HandlerError) {
+	var newTeams []portainer.Team
+	for _, teamName := range userData.Teams {
+		team, err := handler.DataStore.Team().TeamByName(teamName)
+		if err == bolterrors.ErrObjectNotFound {
+			team = &portainer.Team{
+				Name: teamName,
+			}
+
+			err = handler.DataStore.Team().CreateTeam(team)
+			if err != nil {
+				return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the team inside the database", err}
+			}
+		} else if err != nil {
+			return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve the team from the database", err}
+		}
+		newTeams = append(newTeams, *team)
+	}
+	return &newTeams, nil
+}
+
+func (handler *Handler) removeUserFromOldGroups(oldTeams *[]portainer.TeamMembership, newTeams *[]portainer.Team) *httperror.HandlerError {
+	for _, oldTeam := range *oldTeams {
+		var removeOldGroup = true
+		for _, newTeam := range *newTeams {
+			if oldTeam.TeamID == newTeam.ID {
+				removeOldGroup = false
+				break
+			}
 		}
 
-		if settings.OAuthSettings.DefaultTeamID != 0 {
+		if removeOldGroup {
+			err := handler.DataStore.TeamMembership().DeleteTeamMembership(oldTeam.ID)
+			if err != nil {
+				return &httperror.HandlerError{http.StatusInternalServerError, "Unable to delete team subscriptions from the database", err}
+			}
+		}
+	}
+	return nil
+}
+
+func (handler *Handler) addUserToNewGroups(user *portainer.User, oldTeams *[]portainer.TeamMembership, newTeams *[]portainer.Team) *httperror.HandlerError {
+	for _, newTeam := range *newTeams {
+		var addToGroup = true
+		for _, oldTeam := range *oldTeams {
+			if oldTeam.TeamID == newTeam.ID {
+				addToGroup = false
+			}
+		}
+
+		if addToGroup {
 			membership := &portainer.TeamMembership{
 				UserID: user.ID,
-				TeamID: settings.OAuthSettings.DefaultTeamID,
+				TeamID: newTeam.ID,
 				Role:   portainer.TeamMember,
 			}
 
-			err = handler.DataStore.TeamMembership().CreateTeamMembership(membership)
+			err := handler.DataStore.TeamMembership().CreateTeamMembership(membership)
 			if err != nil {
 				return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist team membership inside the database", err}
 			}
 		}
-
 	}
+	return nil
+}
 
-	return handler.writeToken(w, user)
+func (handler *Handler) checkAdminPrivileges(user *portainer.User, userData *portainer.OAuthUserData, settings *portainer.Settings) *httperror.HandlerError {
+	user.Role = portainer.StandardUserRole
+	for _, team := range userData.Teams {
+		if team == settings.OAuthSettings.AdminGroup {
+			user.Role = portainer.AdministratorRole
+		}
+	}
+	// Update user privileges
+	err := handler.DataStore.User().UpdateUser(user.ID, user)
+	if err != nil {
+		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to update the user with necessary privileges", err}
+	}
+	return nil
 }

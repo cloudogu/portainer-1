@@ -14,6 +14,13 @@ angular.module('portainer.oauth').factory('OAuth', [
             action: 'validate',
           },
         },
+        verifyToken: {
+          method: 'POST',
+          ignoreLoadingBar: true,
+          params: {
+            action: 'verifyToken',
+          },
+        },
       }
     );
   },

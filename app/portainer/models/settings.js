@@ -33,6 +33,7 @@ export function PublicSettingsViewModel(settings) {
   this.EnableEdgeComputeFeatures = settings.EnableEdgeComputeFeatures;
   this.LogoURL = settings.LogoURL;
   this.OAuthLoginURI = settings.OAuthLoginURI;
+  this.OAuthLogoutURI = settings.OAuthLogoutURI;
   this.EnableTelemetry = settings.EnableTelemetry;
 }
 
@@ -64,6 +65,7 @@ export function OAuthSettingsViewModel(data) {
   this.AuthorizationURI = data.AuthorizationURI;
   this.ResourceURI = data.ResourceURI;
   this.RedirectURI = data.RedirectURI;
+  this.LogoutURI = data.LogoutURI;
   this.UserIdentifier = data.UserIdentifier;
   this.Scopes = data.Scopes;
   this.OAuthAutoCreateUsers = data.OAuthAutoCreateUsers;

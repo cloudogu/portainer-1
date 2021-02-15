@@ -3,7 +3,6 @@ package oauth
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
@@ -22,17 +21,36 @@ func NewService() *Service {
 	return &Service{}
 }
 
+type authenticationData struct {
+	ID         string `json:"id"`
+	Attributes struct {
+		Username    string   `json:"username"`
+		Cn          string   `json:"cn"`
+		Mail        string   `json:"mail"`
+		GivenName   string   `json:"givenName"`
+		Surname     string   `json:"surname"`
+		DisplayName string   `json:"displayName"`
+		Groups      []string `json:"groups"`
+	} `json:"attributes"`
+}
+
 // Authenticate takes an access code and exchanges it for an access token from portainer OAuthSettings token endpoint.
 // On success, it will then return the username associated to authenticated user by fetching this information
 // from the resource server and matching it with the user identifier setting.
-func (*Service) Authenticate(code string, configuration *portainer.OAuthSettings) (string, error) {
+func (*Service) Authenticate(code string, configuration *portainer.OAuthSettings) (portainer.OAuthUserData, error) {
 	token, err := getAccessToken(code, configuration)
 	if err != nil {
 		log.Printf("[DEBUG] - Failed retrieving access token: %v", err)
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
-	return getUsername(token, configuration)
+	userData, err := getUserData(token, configuration)
+	if err != nil {
+		log.Printf("[DEBUG] - Failed retrieving username: %v", err)
+		return portainer.OAuthUserData{}, err
+	}
+
+	return userData, nil
 }
 
 func getAccessToken(code string, configuration *portainer.OAuthSettings) (string, error) {
@@ -50,27 +68,27 @@ func getAccessToken(code string, configuration *portainer.OAuthSettings) (string
 	return token.AccessToken, nil
 }
 
-func getUsername(token string, configuration *portainer.OAuthSettings) (string, error) {
+func getUserData(token string, configuration *portainer.OAuthSettings) (portainer.OAuthUserData, error) {
 	req, err := http.NewRequest("GET", configuration.ResourceURI, nil)
 	if err != nil {
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	client := &http.Client{}
 	req.Header.Set("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", &oauth2.RetrieveError{
+		return portainer.OAuthUserData{}, &oauth2.RetrieveError{
 			Response: resp,
 			Body:     body,
 		}
@@ -78,44 +96,45 @@ func getUsername(token string, configuration *portainer.OAuthSettings) (string, 
 
 	content, _, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 	if err != nil {
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	if content == "application/x-www-form-urlencoded" || content == "text/plain" {
 		values, err := url.ParseQuery(string(body))
 		if err != nil {
-			return "", err
+			return portainer.OAuthUserData{}, err
 		}
 
 		username := values.Get(configuration.UserIdentifier)
 		if username == "" {
-			return username, &oauth2.RetrieveError{
+			return portainer.OAuthUserData{}, &oauth2.RetrieveError{
 				Response: resp,
 				Body:     body,
 			}
 		}
 
-		return username, nil
-	}
-
-	var datamap map[string]interface{}
-	if err = json.Unmarshal(body, &datamap); err != nil {
-		return "", err
-	}
-
-	username, ok := datamap[configuration.UserIdentifier].(string)
-	if ok && username != "" {
-		return username, nil
-	}
-
-	if !ok {
-		username, ok := datamap[configuration.UserIdentifier].(float64)
-		if ok && username != 0 {
-			return fmt.Sprint(int(username)), nil
+		userData := portainer.OAuthUserData{
+			Username:   username,
+			OAuthToken: token,
 		}
+		return userData, nil
 	}
 
-	return "", &oauth2.RetrieveError{
+	var data authenticationData
+	if err = json.Unmarshal(body, &data); err != nil {
+		return portainer.OAuthUserData{}, err
+	}
+
+	if data.ID != "" {
+		userData := portainer.OAuthUserData{
+			Username:   data.ID,
+			OAuthToken: token,
+			Teams:      data.Attributes.Groups,
+		}
+		return userData, nil
+	}
+
+	return portainer.OAuthUserData{}, &oauth2.RetrieveError{
 		Response: resp,
 		Body:     body,
 	}

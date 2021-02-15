@@ -116,9 +116,10 @@ func (handler *Handler) authenticateLDAPAndCreateUser(w http.ResponseWriter, use
 
 func (handler *Handler) writeToken(w http.ResponseWriter, user *portainer.User) *httperror.HandlerError {
 	tokenData := &portainer.TokenData{
-		ID:       user.ID,
-		Username: user.Username,
-		Role:     user.Role,
+		ID:         user.ID,
+		Username:   user.Username,
+		Role:       user.Role,
+		OAuthToken: user.OAuthToken,
 	}
 
 	return handler.persistAndWriteToken(w, tokenData)

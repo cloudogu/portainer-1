@@ -2,7 +2,7 @@ import angular from 'angular';
 
 class LogoutController {
   /* @ngInject */
-  constructor($async, $state, $transition$, Authentication, StateManager, Notifications, LocalStorage) {
+  constructor($async, $state, $transition$, Authentication, StateManager, Notifications, LocalStorage, SettingsService) {
     this.$async = $async;
     this.$state = $state;
     this.$transition$ = $transition$;
@@ -11,6 +11,7 @@ class LogoutController {
     this.StateManager = StateManager;
     this.Notifications = Notifications;
     this.LocalStorage = LocalStorage;
+    this.SettingsService = SettingsService;
 
     this.logo = this.StateManager.getState().application.logo;
     this.logoutAsync = this.logoutAsync.bind(this);
@@ -26,9 +27,10 @@ class LogoutController {
     const performApiLogout = this.$transition$.params().performApiLogout;
     try {
       await this.Authentication.logout(performApiLogout);
+      const settings = await this.SettingsService.publicSettings();
+      document.location.href = settings.OAuthLogoutURI;
     } finally {
       this.LocalStorage.storeLogoutReason(error);
-      this.$state.go('portainer.auth', { reload: true });
     }
   }
 

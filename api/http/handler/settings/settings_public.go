@@ -23,6 +23,7 @@ type publicSettingsResponse struct {
 	EnableEdgeComputeFeatures                 bool                           `json:"EnableEdgeComputeFeatures"`
 	OAuthLoginURI                             string                         `json:"OAuthLoginURI"`
 	EnableTelemetry                           bool                           `json:"EnableTelemetry"`
+	OAuthLogoutURI                            string                         `json:"OAuthLogoutURI"`
 }
 
 // GET request on /api/settings/public
@@ -50,6 +51,7 @@ func (handler *Handler) settingsPublic(w http.ResponseWriter, r *http.Request) *
 			settings.OAuthSettings.ClientID,
 			settings.OAuthSettings.RedirectURI,
 			settings.OAuthSettings.Scopes),
+		OAuthLogoutURI: settings.OAuthSettings.LogoutURI,
 	}
 
 	return response.JSON(w, publicSettings)

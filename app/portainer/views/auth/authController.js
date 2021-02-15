@@ -58,6 +58,7 @@ class AuthenticationController {
 
     this.manageOauthCodeReturn = this.manageOauthCodeReturn.bind(this);
     this.authEnabledFlowAsync = this.authEnabledFlowAsync.bind(this);
+    this.isTokenValid = this.isTokenValid.bind(this);
     this.onInit = this.onInit.bind(this);
   }
 
@@ -224,6 +225,14 @@ class AuthenticationController {
     }
   }
 
+  async isTokenValid() {
+    try {
+      return await this.Authentication.OAuthIsTokenValid();
+    } catch (err) {
+      return false;
+    }
+  }
+
   toggleStandardLogin() {
     this.state.showStandardLogin = !this.state.showStandardLogin;
   }
@@ -243,24 +252,15 @@ class AuthenticationController {
         this.generateOAuthLoginURI();
         return;
       }
-      this.generateOAuthLoginURI();
 
-      if (this.$stateParams.logout || this.$stateParams.error) {
-        this.logout(this.$stateParams.error);
-        return;
-      }
-      const error = this.LocalStorage.getLogoutReason();
-      if (error) {
-        this.state.AuthenticationError = error;
-        this.LocalStorage.cleanLogoutReason();
-      }
-
-      if (this.Authentication.isAuthenticated()) {
+      if (this.Authentication.isAuthenticated() && (await this.isTokenValid())) {
         await this.postLoginSteps();
+      } else {
+        this.state.loginInProgress = true;
+        this.LocalStorage.cleanAuthData();
+        this.generateOAuthLoginURI();
+        document.location.href = this.OAuthLoginURI;
       }
-      this.state.loginInProgress = false;
-
-      await this.authEnabledFlowAsync();
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve public settings');
     }
