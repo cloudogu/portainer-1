@@ -15,7 +15,7 @@ func TestNewBlocklistTokenMap(t *testing.T) {
 }
 
 func TestNewBlocklistTokenMapTicker(t *testing.T) {
-	t.Run("Do automatically remove dead entires with ticker", func(t *testing.T) {
+	t.Run("Do automatically remove dead entries with ticker", func(t *testing.T) {
 		b := NewBlocklistTokenMap(1, time.Second*2)
 
 		b.Put("test1")
@@ -25,7 +25,7 @@ func TestNewBlocklistTokenMapTicker(t *testing.T) {
 		time.Sleep(time.Second * 3)
 		assert.Equal(t, 0, len(b.blocklist))
 	})
-	t.Run("Do automatically remove dead entires with ticker", func(t *testing.T) {
+	t.Run("Do not automatically remove alive entries with ticker", func(t *testing.T) {
 		b := NewBlocklistTokenMap(5, time.Second*2)
 
 		b.Put("test1")

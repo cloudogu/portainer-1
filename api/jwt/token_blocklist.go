@@ -60,7 +60,7 @@ func (m *BlocklistTokenMap) Put(token string) {
 	m.blocklist[token] = it
 }
 
-// IsBlocked checks whether a certain token is blacklisted. When the requested token is expired it does not count as blocked.
+// IsBlocked checks whether a certain token is blocked. When the requested token is expired it does not count as blocked.
 func (m *BlocklistTokenMap) IsBlocked(token string) bool {
 	mapToken, ok := m.blocklist[token]
 	if !ok {
