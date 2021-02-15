@@ -954,7 +954,7 @@ type (
 	}
 
 	// Blocklist represents a service for blocking specific authentication tokens
-	BlacklistedJWTService interface {
+	BlocklistJWTService interface {
 		JWTService
 		AddTokenToBlocklist(token string)
 	}

@@ -36,7 +36,7 @@ func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Re
 
 		token := values.Get("logoutRequest")
 
-		jwtBlocklist, ok := handler.JWTService.(portainer.BlacklistedJWTService)
+		jwtBlocklist, ok := handler.JWTService.(portainer.BlocklistJWTService)
 		if ok {
 			jwtBlocklist.AddTokenToBlocklist(token)
 		}
