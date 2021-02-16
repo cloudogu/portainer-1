@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	// change settings timeout accordingly, current 24h = 86400
 	blocklistTokenTTLinSeconds = 86400
 )
 

@@ -2,7 +2,7 @@ package auth
 
 import (
 	"fmt"
-	. "github.com/portainer/libhttp/error"
+	portError "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
 	portainer "github.com/portainer/portainer/api"
 	"io/ioutil"
@@ -16,22 +16,22 @@ type verifyResponse struct {
 	Valid bool `json:"valid"`
 }
 
-func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Request) *HandlerError {
+func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Request) *portError.HandlerError {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		return &HandlerError{http.StatusInternalServerError, "Unable to block token: ", err}
+		return &portError.HandlerError{http.StatusInternalServerError, "Unable to block token: ", err}
 	}
 
 	content, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return &HandlerError{http.StatusInternalServerError, "Unable to find content-type ", err}
+		return &portError.HandlerError{http.StatusInternalServerError, "Unable to find content-type ", err}
 	}
 
 	if content == "application/x-www-form-urlencoded" || content == "text/plain" {
 		values, err := url.ParseQuery(string(body))
 		if err != nil {
-			return &HandlerError{http.StatusInternalServerError, "Cannot parse body ", err}
+			return &portError.HandlerError{http.StatusInternalServerError, "Cannot parse body ", err}
 		}
 
 		token := values.Get("logoutRequest")
@@ -44,14 +44,14 @@ func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(200)
 		return nil
 	} else {
-		return &HandlerError{
+		return &portError.HandlerError{
 			StatusCode: http.StatusInternalServerError,
 			Message:    fmt.Sprintf("Invalid content type %s. Expected \"application/x-www-form-urlencoded\" or \"text/plain\"", content),
 		}
 	}
 }
 
-func (handler *Handler) isJWTTokenNotBlocked(w http.ResponseWriter, r *http.Request) *HandlerError {
+func (handler *Handler) isJWTTokenNotBlocked(w http.ResponseWriter, r *http.Request) *portError.HandlerError {
 	token, handlerErr := handler.retrieveAuthTokenFromRequest(r)
 	if handlerErr != nil {
 		return handlerErr
@@ -66,7 +66,7 @@ func (handler *Handler) isJWTTokenNotBlocked(w http.ResponseWriter, r *http.Requ
 	return response.JSON(w, &verifyResponse{Valid: true})
 }
 
-func (handler *Handler) retrieveAuthTokenFromRequest(r *http.Request) (string, *HandlerError) {
+func (handler *Handler) retrieveAuthTokenFromRequest(r *http.Request) (string, *portError.HandlerError) {
 	// Optionally, token might be set via the "token" query parameter.
 	// For example, in websocket requests
 	token := r.URL.Query().Get("token")
@@ -79,7 +79,7 @@ func (handler *Handler) retrieveAuthTokenFromRequest(r *http.Request) (string, *
 	}
 
 	if token == "" {
-		return "", &HandlerError{StatusCode: http.StatusBadRequest, Message: "Missing token"}
+		return "", &portError.HandlerError{StatusCode: http.StatusBadRequest, Message: "Missing token"}
 	}
 	return token, nil
 }
