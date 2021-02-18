@@ -5,13 +5,13 @@ ARCH=$2
 DOCKER_COMPOSE_VERSION=$3
 
 if [ "${PLATFORM}" == 'linux' ] && [ "${ARCH}" == 'amd64' ]; then
-  wget -O "dist/docker-compose" "https://github.com/portainer/docker-compose-linux-amd64-static-binary/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose"
+  wget -q -O "dist/docker-compose" "https://github.com/portainer/docker-compose-linux-amd64-static-binary/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose"
   chmod +x "dist/docker-compose"
 elif [ "${PLATFORM}" == 'mac' ]; then
-  wget -O "dist/docker-compose" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Darwin-x86_64"
+  wget -q -O "dist/docker-compose" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Darwin-x86_64"
   chmod +x "dist/docker-compose"
 elif [ "${PLATFORM}" == 'win' ]; then
-  wget -O "dist/docker-compose.exe" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Windows-x86_64.exe"
+  wget -q -O "dist/docker-compose.exe" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Windows-x86_64.exe"
   chmod +x "dist/docker-compose.exe"
 fi
 
