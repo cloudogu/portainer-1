@@ -30,3 +30,4 @@ RUN cd /tmp \
 
 # Configure Go
 ENV PATH "$PATH:/usr/local/go/bin"
+ENV GOPATH "$HOME/go"
