@@ -8,7 +8,7 @@ import (
 
 	cmap "github.com/orcaman/concurrent-map"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"

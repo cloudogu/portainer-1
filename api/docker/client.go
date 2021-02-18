@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
 	"github.com/docker/docker/client"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
 )
 
 var errUnsupportedEnvironmentType = errors.New("Environment not supported")

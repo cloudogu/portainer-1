@@ -10,12 +10,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/responseutils"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 	"github.com/docker/docker/client"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/http/proxy/factory/responseutils"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/authorization"
 )
 
 var apiVersionRe = regexp.MustCompile(`(/v[0-9]\.[0-9]*)?`)

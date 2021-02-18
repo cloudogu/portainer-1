@@ -1,8 +1,8 @@
 package role
 
 import (
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/internal"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/internal"
 
 	"github.com/boltdb/bolt"
 )

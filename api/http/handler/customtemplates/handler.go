@@ -3,11 +3,11 @@ package customtemplates
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/authorization"
 )
 
 // Handler is the HTTP handler used to handle endpoint group operations.

@@ -1,4 +1,4 @@
-module github.com/portainer/portainer/api
+module github.com/cloudogu/portainer-ce/api
 
 go 1.13
 
@@ -21,6 +21,7 @@ require (
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jpillora/chisel v0.0.0-20190724232113-f3a8df20e389
 	github.com/json-iterator/go v1.1.8
+	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/mattn/go-shellwords v1.0.6 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
@@ -28,7 +29,7 @@ require (
 	github.com/portainer/libcompose v0.5.3
 	github.com/portainer/libcrypto v0.0.0-20190723020515-23ebe86ab2c2
 	github.com/portainer/libhttp v0.0.0-20190806161843-ba068f58be33
-	github.com/stretchr/testify v1.6.1 // indirect
+	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20191128160524-b544559bb6d1
 	golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45

@@ -6,8 +6,8 @@ import (
 
 	"github.com/coreos/go-semver/semver"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/client"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/client"
 
 	"github.com/portainer/libhttp/response"
 )

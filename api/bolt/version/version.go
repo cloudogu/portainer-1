@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/boltdb/bolt"
-	"github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/bolt/internal"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/bolt/internal"
 )
 
 const (

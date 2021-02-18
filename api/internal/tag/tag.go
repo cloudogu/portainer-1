@@ -1,6 +1,6 @@
 package tag
 
-import "github.com/portainer/portainer/api"
+import "github.com/cloudogu/portainer-ce/api"
 
 type tagSet map[portainer.TagID]bool
 

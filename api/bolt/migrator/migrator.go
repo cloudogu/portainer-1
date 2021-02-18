@@ -2,22 +2,22 @@ package migrator
 
 import (
 	"github.com/boltdb/bolt"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/endpoint"
-	"github.com/portainer/portainer/api/bolt/endpointgroup"
-	"github.com/portainer/portainer/api/bolt/endpointrelation"
-	"github.com/portainer/portainer/api/bolt/extension"
-	"github.com/portainer/portainer/api/bolt/registry"
-	"github.com/portainer/portainer/api/bolt/resourcecontrol"
-	"github.com/portainer/portainer/api/bolt/role"
-	"github.com/portainer/portainer/api/bolt/schedule"
-	"github.com/portainer/portainer/api/bolt/settings"
-	"github.com/portainer/portainer/api/bolt/stack"
-	"github.com/portainer/portainer/api/bolt/tag"
-	"github.com/portainer/portainer/api/bolt/teammembership"
-	"github.com/portainer/portainer/api/bolt/user"
-	"github.com/portainer/portainer/api/bolt/version"
-	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/endpoint"
+	"github.com/cloudogu/portainer-ce/api/bolt/endpointgroup"
+	"github.com/cloudogu/portainer-ce/api/bolt/endpointrelation"
+	"github.com/cloudogu/portainer-ce/api/bolt/extension"
+	"github.com/cloudogu/portainer-ce/api/bolt/registry"
+	"github.com/cloudogu/portainer-ce/api/bolt/resourcecontrol"
+	"github.com/cloudogu/portainer-ce/api/bolt/role"
+	"github.com/cloudogu/portainer-ce/api/bolt/schedule"
+	"github.com/cloudogu/portainer-ce/api/bolt/settings"
+	"github.com/cloudogu/portainer-ce/api/bolt/stack"
+	"github.com/cloudogu/portainer-ce/api/bolt/tag"
+	"github.com/cloudogu/portainer-ce/api/bolt/teammembership"
+	"github.com/cloudogu/portainer-ce/api/bolt/user"
+	"github.com/cloudogu/portainer-ce/api/bolt/version"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 )
 
 type (
@@ -128,7 +128,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https://github.com/portainer/portainer/issues/1235
+	// https://github.com/cloudogu/portainer-ce/issues/1235
 	if m.currentDBVersion < 5 {
 		err := m.updateSettingsToVersion5()
 		if err != nil {
@@ -136,7 +136,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https://github.com/portainer/portainer/issues/1236
+	// https://github.com/cloudogu/portainer-ce/issues/1236
 	if m.currentDBVersion < 6 {
 		err := m.updateSettingsToVersion6()
 		if err != nil {
@@ -144,7 +144,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https://github.com/portainer/portainer/issues/1449
+	// https://github.com/cloudogu/portainer-ce/issues/1449
 	if m.currentDBVersion < 7 {
 		err := m.updateSettingsToVersion7()
 		if err != nil {
@@ -159,7 +159,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https: //github.com/portainer/portainer/issues/1396
+	// https: //github.com/cloudogu/portainer-ce/issues/1396
 	if m.currentDBVersion < 9 {
 		err := m.updateEndpointsToVersion9()
 		if err != nil {
@@ -167,7 +167,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https://github.com/portainer/portainer/issues/461
+	// https://github.com/cloudogu/portainer-ce/issues/461
 	if m.currentDBVersion < 10 {
 		err := m.updateEndpointsToVersion10()
 		if err != nil {
@@ -175,7 +175,7 @@ func (m *Migrator) Migrate() error {
 		}
 	}
 
-	// https://github.com/portainer/portainer/issues/1906
+	// https://github.com/cloudogu/portainer-ce/issues/1906
 	if m.currentDBVersion < 11 {
 		err := m.updateEndpointsToVersion11()
 		if err != nil {

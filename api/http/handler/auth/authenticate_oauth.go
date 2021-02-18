@@ -3,11 +3,11 @@ package auth
 import (
 	"errors"
 	"github.com/asaskevich/govalidator"
+	"github.com/cloudogu/portainer-ce/api"
+	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	"github.com/portainer/portainer/api"
-	bolterrors "github.com/portainer/portainer/api/bolt/errors"
-	httperrors "github.com/portainer/portainer/api/http/errors"
 	"log"
 	"net/http"
 )

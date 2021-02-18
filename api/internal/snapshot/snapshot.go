@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 // Service repesents a service to manage endpoint snapshots.

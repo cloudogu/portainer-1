@@ -1,6 +1,6 @@
 package migrator
 
-import portainer "github.com/portainer/portainer/api"
+import portainer "github.com/cloudogu/portainer-ce/api"
 
 func (m *Migrator) updateSettingsToDB24() error {
 	legacySettings, err := m.settingsService.Settings()

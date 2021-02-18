@@ -2,8 +2,8 @@ package websocket
 
 import (
 	"crypto/tls"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
 	"net"
 	"net/url"
 )

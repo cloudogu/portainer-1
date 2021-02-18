@@ -1,6 +1,6 @@
 package migrator
 
-import "github.com/portainer/portainer/api"
+import "github.com/cloudogu/portainer-ce/api"
 
 func (m *Migrator) updateSettingsToVersion13() error {
 	legacySettings, err := m.settingsService.Settings()

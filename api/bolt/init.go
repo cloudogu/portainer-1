@@ -1,9 +1,9 @@
 package bolt
 
 import (
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
 	"github.com/gofrs/uuid"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
 )
 
 // Init creates the default data set.

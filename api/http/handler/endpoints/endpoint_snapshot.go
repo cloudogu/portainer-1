@@ -3,12 +3,12 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/internal/snapshot"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/internal/snapshot"
 )
 
 // POST request on /api/endpoints/:id/snapshot

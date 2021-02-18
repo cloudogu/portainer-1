@@ -9,8 +9,8 @@ import (
 	"path"
 	"strings"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
 )
 
 // ComposeWrapper is a wrapper for docker-compose binary

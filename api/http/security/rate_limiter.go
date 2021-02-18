@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudogu/portainer-ce/api/http/errors"
 	"github.com/g07cha/defender"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/http/errors"
 )
 
 // RateLimiter represents an entity that manages request rate limiting

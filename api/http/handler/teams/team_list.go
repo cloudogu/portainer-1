@@ -3,9 +3,9 @@ package teams
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 // GET request on /api/teams

@@ -10,8 +10,8 @@ import (
 
 	"github.com/portainer/libcrypto"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/dchest/uniuri"
-	portainer "github.com/portainer/portainer/api"
 )
 
 const (

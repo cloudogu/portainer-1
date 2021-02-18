@@ -1,6 +1,6 @@
 package edge
 
-import "github.com/portainer/portainer/api"
+import "github.com/cloudogu/portainer-ce/api"
 
 // EndpointRelatedEdgeStacks returns a list of Edge stacks related to this Endpoint
 func EndpointRelatedEdgeStacks(endpoint *portainer.Endpoint, endpointGroup *portainer.EndpointGroup, edgeGroups []portainer.EdgeGroup, edgeStacks []portainer.EdgeStack) []portainer.EdgeStackID {

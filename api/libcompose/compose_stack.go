@@ -6,6 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/portainer/libcompose/config"
 	"github.com/portainer/libcompose/docker"
 	"github.com/portainer/libcompose/docker/client"
@@ -13,7 +14,6 @@ import (
 	"github.com/portainer/libcompose/lookup"
 	"github.com/portainer/libcompose/project"
 	"github.com/portainer/libcompose/project/options"
-	portainer "github.com/portainer/portainer/api"
 )
 
 const (

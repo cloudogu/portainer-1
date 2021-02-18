@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"net/url"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/http/proxy/factory/dockercompose"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/dockercompose"
 )
 
 // ProxyServer provide an extedned proxy with a local server to forward requests

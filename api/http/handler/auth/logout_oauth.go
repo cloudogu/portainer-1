@@ -2,9 +2,9 @@ package auth
 
 import (
 	"fmt"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	portError "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 	"io/ioutil"
 	"mime"
 	"net/http"

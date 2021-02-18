@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"sync"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 const defaultServiceAccountTokenFile = "/var/run/secrets/kubernetes.io/serviceaccount/token"

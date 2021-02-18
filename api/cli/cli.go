@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 
 	"os"
 	"path/filepath"

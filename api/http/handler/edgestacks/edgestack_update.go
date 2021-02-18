@@ -6,12 +6,12 @@ import (
 	"strconv"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/cloudogu/portainer-ce/api"
+	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
-	bolterrors "github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/internal/edge"
 )
 
 type updateEdgeStackPayload struct {

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
 	ldap "github.com/go-ldap/ldap/v3"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
-	httperrors "github.com/portainer/portainer/api/http/errors"
 )
 
 var (

@@ -1,7 +1,7 @@
 package migrator
 
 import (
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 func (m *Migrator) updateSettingsToDB25() error {

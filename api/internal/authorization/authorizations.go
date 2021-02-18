@@ -1,6 +1,6 @@
 package authorization
 
-import "github.com/portainer/portainer/api"
+import "github.com/cloudogu/portainer-ce/api"
 
 // Service represents a service used to
 // update authorizations associated to a user or team.

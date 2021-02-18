@@ -3,11 +3,11 @@ package registries
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 func hideFields(registry *portainer.Registry) {

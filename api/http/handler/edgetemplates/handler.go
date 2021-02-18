@@ -5,9 +5,9 @@ import (
 
 	httperror "github.com/portainer/libhttp/error"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 // Handler is the HTTP handler used to handle edge endpoint operations.

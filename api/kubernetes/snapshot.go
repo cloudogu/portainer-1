@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/portainer/portainer/api/kubernetes/cli"
+	"github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )

@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/docker"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/http/proxy/factory/docker"
 )
 
 func (factory *ProxyFactory) newDockerProxy(endpoint *portainer.Endpoint) (http.Handler, error) {

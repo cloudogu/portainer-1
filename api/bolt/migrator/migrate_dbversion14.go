@@ -11,6 +11,6 @@ func (m *Migrator) updateSettingsToDBVersion15() error {
 }
 
 func (m *Migrator) updateTemplatesToVersion15() error {
-	// Removed with the entire template management layer, part of https://github.com/portainer/portainer/issues/3707
+	// Removed with the entire template management layer, part of https://github.com/cloudogu/portainer-ce/issues/3707
 	return nil
 }

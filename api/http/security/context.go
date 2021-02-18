@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 type (

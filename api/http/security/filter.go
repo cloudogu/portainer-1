@@ -1,7 +1,7 @@
 package security
 
 import (
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 // FilterUserTeams filters teams based on user role.

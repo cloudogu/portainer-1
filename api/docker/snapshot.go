@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudogu/portainer-ce/api"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/portainer/portainer/api"
 )
 
 // Snapshotter represents a service used to create endpoint snapshots

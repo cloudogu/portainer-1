@@ -1,7 +1,7 @@
 package security
 
 import (
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 // AuthorizedResourceControlAccess checks whether the user can alter an existing resource control.

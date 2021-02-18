@@ -3,7 +3,7 @@ package cli
 import (
 	"encoding/json"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

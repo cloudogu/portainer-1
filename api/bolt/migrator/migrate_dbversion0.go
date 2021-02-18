@@ -2,9 +2,9 @@ package migrator
 
 import (
 	"github.com/boltdb/bolt"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/bolt/user"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/bolt/user"
 )
 
 func (m *Migrator) updateAdminUserToDBVersion1() error {

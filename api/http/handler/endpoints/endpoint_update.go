@@ -5,14 +5,14 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/http/client"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	"github.com/cloudogu/portainer-ce/api/internal/tag"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/http/client"
-	"github.com/portainer/portainer/api/internal/edge"
-	"github.com/portainer/portainer/api/internal/tag"
 )
 
 type endpointUpdatePayload struct {

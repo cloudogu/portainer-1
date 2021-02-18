@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 var errInvalidResponseStatus = errors.New("Invalid response status (expecting 200)")

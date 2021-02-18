@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	bolterrors "github.com/portainer/portainer/api/bolt/errors"
-	httperrors "github.com/portainer/portainer/api/http/errors"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 type updateComposeStackPayload struct {

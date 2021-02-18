@@ -11,9 +11,9 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy/factory/responseutils"
-	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/responseutils"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 )
 
 const (

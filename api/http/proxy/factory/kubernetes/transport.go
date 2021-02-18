@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/portainer/portainer/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
 )
 
 type (

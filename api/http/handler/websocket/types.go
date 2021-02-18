@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 )
 
 type webSocketRequestParams struct {

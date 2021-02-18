@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/portainer/portainer/api/archive"
+	"github.com/cloudogu/portainer-ce/api/archive"
 )
 
 type postDockerfileRequest struct {

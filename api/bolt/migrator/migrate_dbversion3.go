@@ -1,6 +1,6 @@
 package migrator
 
-import "github.com/portainer/portainer/api"
+import "github.com/cloudogu/portainer-ce/api"
 
 func (m *Migrator) updateEndpointsToDBVersion4() error {
 	legacyEndpoints, err := m.endpointService.Endpoints()

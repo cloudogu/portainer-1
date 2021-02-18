@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/snapshot"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/snapshot"
 )
 
 // POST request on /api/endpoints/snapshot

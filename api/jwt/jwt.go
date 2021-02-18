@@ -3,7 +3,7 @@ package jwt
 import (
 	"errors"
 	"fmt"
-	"github.com/portainer/portainer/api"
+	"github.com/cloudogu/portainer-ce/api"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"

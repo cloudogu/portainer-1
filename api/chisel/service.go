@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
 	"github.com/dchest/uniuri"
 	chserver "github.com/jpillora/chisel/server"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
 )
 
 const (

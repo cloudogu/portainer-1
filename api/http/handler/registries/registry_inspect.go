@@ -3,13 +3,13 @@ package registries
 import (
 	"net/http"
 
-	bolterrors "github.com/portainer/portainer/api/bolt/errors"
-	"github.com/portainer/portainer/api/http/errors"
+	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/http/errors"
 
+	"github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
 )
 
 // GET request on /api/registries/:id

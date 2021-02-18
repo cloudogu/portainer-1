@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/filesystem"
-	"github.com/portainer/portainer/api/internal/edge"
 )
 
 // POST request on /api/endpoint_groups

@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
 	"github.com/gorilla/websocket"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/bolt/errors"
 )
 
 // websocketAttach handles GET requests on /websocket/attach?id=<attachID>&endpointId=<endpointID>&nodeName=<nodeName>&token=<token>

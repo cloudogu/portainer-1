@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/cloudogu/portainer-ce/api"
 	"github.com/gofrs/uuid"
-	"github.com/portainer/portainer/api"
 
 	"io"
 	"os"

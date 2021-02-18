@@ -1,8 +1,8 @@
 package edge
 
 import (
-	"github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/tag"
+	"github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/tag"
 )
 
 // EdgeGroupRelatedEndpoints returns a list of endpoints related to this Edge group

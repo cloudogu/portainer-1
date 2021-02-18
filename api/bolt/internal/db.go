@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	"github.com/boltdb/bolt"
-	"github.com/portainer/portainer/api/bolt/errors"
+	"github.com/cloudogu/portainer-ce/api/bolt/errors"
 )
 
 // Itob returns an 8-byte big endian representation of v.
