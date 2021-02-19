@@ -6,5 +6,6 @@ api/cmd/portainer/portainer*
 .tmp
 **/.vscode/settings.json
 **/.vscode/tasks.json
+api/vendor
 
 .eslintcache
