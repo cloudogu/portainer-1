@@ -119,14 +119,7 @@ class AuthenticationController {
 
   async checkForEndpointsAsync() {
     try {
-      const endpoints = await this.EndpointService.endpoints(0, 1);
-      const isAdmin = this.Authentication.isAdmin();
-
-      if (endpoints.value.length === 0 && isAdmin) {
-        return this.$state.go('portainer.init.endpoint');
-      } else {
-        return this.$state.go('portainer.home');
-      }
+      return this.$state.go('portainer.home');
     } catch (err) {
       this.error(err, 'Unable to retrieve endpoints');
     }
