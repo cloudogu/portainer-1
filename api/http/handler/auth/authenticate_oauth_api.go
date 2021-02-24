@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/portainer/libhttp/request"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -59,7 +58,6 @@ func (handler *Handler) authenticateViaApi(w http.ResponseWriter, r *http.Reques
 	u, _ := url.ParseRequestURI(settings.OAuthSettings.LogoutURI)
 	u.Path = "/cas/v1/tickets"
 	urlStr := u.String()
-	log.Print("TicketURL: " + urlStr)
 
 	client := &http.Client{}
 	data := url.Values{}
