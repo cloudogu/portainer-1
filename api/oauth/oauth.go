@@ -3,14 +3,13 @@ package oauth
 import (
 	"context"
 	"encoding/json"
+	"github.com/cloudogu/portainer-ce/api"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"mime"
 	"net/http"
 	"net/url"
-
-	"github.com/cloudogu/portainer-ce/api"
 )
 
 // Service represents a service used to authenticate users against an authorization server
@@ -24,13 +23,14 @@ func NewService() *Service {
 type authenticationData struct {
 	ID         string `json:"id"`
 	Attributes struct {
-		Username    string   `json:"username"`
-		Cn          string   `json:"cn"`
-		Mail        string   `json:"mail"`
-		GivenName   string   `json:"givenName"`
-		Surname     string   `json:"surname"`
-		DisplayName string   `json:"displayName"`
-		Groups      []string `json:"groups"`
+		Username    string          `json:"username"`
+		Cn          string          `json:"cn"`
+		Mail        string          `json:"mail"`
+		GivenName   string          `json:"givenName"`
+		Surname     string          `json:"surname"`
+		DisplayName string          `json:"displayName"`
+		RawGroups   json.RawMessage `json:"groups"`
+		Groups      []string
 	} `json:"attributes"`
 }
 
@@ -123,6 +123,21 @@ func getUserData(token string, configuration *portainer.OAuthSettings) (portaine
 	var data authenticationData
 	if err = json.Unmarshal(body, &data); err != nil {
 		return portainer.OAuthUserData{}, err
+	}
+
+	if len(data.Attributes.RawGroups) > 0 {
+		switch data.Attributes.RawGroups[0] {
+		case '"':
+			var group string
+			if err := json.Unmarshal(data.Attributes.RawGroups, &group); err != nil {
+				return portainer.OAuthUserData{}, err
+			}
+			data.Attributes.Groups = []string{group}
+		case '[':
+			if err := json.Unmarshal(data.Attributes.RawGroups, &data.Attributes.Groups); err != nil {
+				return portainer.OAuthUserData{}, err
+			}
+		}
 	}
 
 	if data.ID != "" {
