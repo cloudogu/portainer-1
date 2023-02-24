@@ -33,6 +33,23 @@ angular.module('portainer.app').factory('FileUploadService', [
       });
     };
 
+    service.buildImageFromFiles = function (names, files) {
+      var endpointID = EndpointProvider.endpointID();
+      return Upload.upload({
+        url: 'api/endpoints/' + endpointID + '/docker/build',
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        data: { file: files },
+        params: {
+          t: names,
+        },
+        transformResponse: function (data) {
+          return jsonObjectsToArrayHandler(data);
+        },
+      });
+    };
+
     service.loadImages = function (file) {
       var endpointID = EndpointProvider.endpointID();
       return Upload.http({
@@ -48,7 +65,7 @@ angular.module('portainer.app').factory('FileUploadService', [
 
     service.createSchedule = function (payload) {
       return Upload.upload({
-        url: 'api/schedules?method=file',
+        url: 'api/edge_jobs?method=file',
         data: {
           file: payload.File,
           Name: payload.Name,
@@ -57,6 +74,16 @@ angular.module('portainer.app').factory('FileUploadService', [
           Endpoints: Upload.json(payload.Endpoints),
           RetryCount: payload.RetryCount,
           RetryInterval: payload.RetryInterval,
+        },
+      });
+    };
+
+    service.uploadBackup = function (file, password) {
+      return Upload.upload({
+        url: 'api/restore',
+        data: {
+          file,
+          password,
         },
       });
     };
@@ -86,13 +113,13 @@ angular.module('portainer.app').factory('FileUploadService', [
       });
     };
 
-    service.createEdgeStack = function createEdgeStack(stackName, file, edgeGroups) {
+    service.createEdgeStack = function createEdgeStack({ EdgeGroups, ...payload }, file) {
       return Upload.upload({
         url: 'api/edge_stacks?method=file',
         data: {
-          file: file,
-          Name: stackName,
-          EdgeGroups: Upload.json(edgeGroups),
+          file,
+          EdgeGroups: Upload.json(EdgeGroups),
+          ...payload,
         },
         ignoreLoadingBar: true,
       });
@@ -126,7 +153,8 @@ angular.module('portainer.app').factory('FileUploadService', [
       TLSCAFile,
       TLSCertFile,
       TLSKeyFile,
-      checkinInterval
+      checkinInterval,
+      isEdgeDevice
     ) {
       return Upload.upload({
         url: 'api/endpoints',
@@ -144,6 +172,7 @@ angular.module('portainer.app').factory('FileUploadService', [
           TLSCertFile: TLSCertFile,
           TLSKeyFile: TLSKeyFile,
           CheckinInterval: checkinInterval,
+          IsEdgeDevice: isEdgeDevice,
         },
         ignoreLoadingBar: true,
       });
@@ -195,6 +224,16 @@ angular.module('portainer.app').factory('FileUploadService', [
       }
 
       return $q.all(queue);
+    };
+
+    service.uploadOwnershipVoucher = function (voucherFile) {
+      return Upload.upload({
+        url: 'api/fdo/register',
+        data: {
+          voucher: voucherFile,
+        },
+        ignoreLoadingBar: true,
+      });
     };
 
     return service;

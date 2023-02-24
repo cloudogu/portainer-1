@@ -1,26 +1,31 @@
 package stacks
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
-	"path"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/asaskevich/govalidator"
-	portainer "github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/filesystem"
-	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/pkg/errors"
+
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
+	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/http/security"
+	"github.com/portainer/portainer/api/stacks/stackbuilders"
+	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type swarmStackFromFileContentPayload struct {
-	Name             string
-	SwarmID          string
-	StackFileContent string
-	Env              []portainer.Pair
+	// Name of the stack
+	Name string `example:"myStack" validate:"required"`
+	// Swarm cluster identifier
+	SwarmID string `example:"jpofkc0i9uo9wtx1zesuk649w" validate:"required"`
+	// Content of the Stack file
+	StackFileContent string `example:"version: 3\n services:\n web:\n image:nginx" validate:"required"`
+	// A list of environment(endpoint) variables used during stack deployment
+	Env []portainer.Pair
+	// Whether the stack is from a app template
+	FromAppTemplate bool `example:"false"`
 }
 
 func (payload *swarmStackFromFileContentPayload) Validate(r *http.Request) error {
@@ -36,78 +41,81 @@ func (payload *swarmStackFromFileContentPayload) Validate(r *http.Request) error
 	return nil
 }
 
+func createStackPayloadFromSwarmFileContentPayload(name string, swarmID string, fileContent string, env []portainer.Pair, fromAppTemplate bool) stackbuilders.StackPayload {
+	return stackbuilders.StackPayload{
+		Name:             name,
+		SwarmID:          swarmID,
+		StackFileContent: fileContent,
+		Env:              env,
+		FromAppTemplate:  fromAppTemplate,
+	}
+}
+
 func (handler *Handler) createSwarmStackFromFileContent(w http.ResponseWriter, r *http.Request, endpoint *portainer.Endpoint, userID portainer.UserID) *httperror.HandlerError {
 	var payload swarmStackFromFileContentPayload
 	err := request.DecodeAndValidateJSONPayload(r, &payload)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid request payload", err}
+		return httperror.BadRequest("Invalid request payload", err)
 	}
 
-	stacks, err := handler.DataStore.Stack().Stacks()
+	payload.Name = handler.SwarmStackManager.NormalizeStackName(payload.Name)
+
+	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, true)
+
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve stacks from the database", err}
+		return httperror.InternalServerError("Unable to check for name collision", err)
+	}
+	if !isUnique {
+		return stackExistsError(payload.Name)
 	}
 
-	for _, stack := range stacks {
-		if strings.EqualFold(stack.Name, payload.Name) {
-			return &httperror.HandlerError{http.StatusConflict, "A stack with this name already exists", errStackAlreadyExists}
-		}
-	}
-
-	stackID := handler.DataStore.Stack().GetNextIdentifier()
-	stack := &portainer.Stack{
-		ID:           portainer.StackID(stackID),
-		Name:         payload.Name,
-		Type:         portainer.DockerSwarmStack,
-		SwarmID:      payload.SwarmID,
-		EndpointID:   endpoint.ID,
-		EntryPoint:   filesystem.ComposeFileDefaultName,
-		Env:          payload.Env,
-		Status:       portainer.StackStatusActive,
-		CreationDate: time.Now().Unix(),
-	}
-
-	stackFolder := strconv.Itoa(int(stack.ID))
-	projectPath, err := handler.FileService.StoreStackFileFromBytes(stackFolder, stack.EntryPoint, []byte(payload.StackFileContent))
+	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist Compose file on disk", err}
-	}
-	stack.ProjectPath = projectPath
-
-	doCleanUp := true
-	defer handler.cleanUp(stack, &doCleanUp)
-
-	config, configErr := handler.createSwarmDeployConfig(r, stack, endpoint, false)
-	if configErr != nil {
-		return configErr
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	err = handler.deploySwarmStack(config)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, err.Error(), err}
+	stackPayload := createStackPayloadFromSwarmFileContentPayload(payload.Name, payload.SwarmID, payload.StackFileContent, payload.Env, payload.FromAppTemplate)
+
+	swarmStackBuilder := stackbuilders.CreateSwarmStackFileContentBuilder(securityContext,
+		handler.DataStore,
+		handler.FileService,
+		handler.StackDeployer)
+
+	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
+	stack, httpErr := stackBuilderDirector.Build(&stackPayload, endpoint)
+	if httpErr != nil {
+		return httpErr
 	}
 
-	stack.CreatedBy = config.user.Username
-
-	err = handler.DataStore.Stack().CreateStack(stack)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the stack inside the database", err}
-	}
-
-	doCleanUp = false
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
 type swarmStackFromGitRepositoryPayload struct {
-	Name                        string
-	SwarmID                     string
-	Env                         []portainer.Pair
-	RepositoryURL               string
-	RepositoryReferenceName     string
-	RepositoryAuthentication    bool
-	RepositoryUsername          string
-	RepositoryPassword          string
-	ComposeFilePathInRepository string
+	// Name of the stack
+	Name string `example:"myStack" validate:"required"`
+	// Swarm cluster identifier
+	SwarmID string `example:"jpofkc0i9uo9wtx1zesuk649w" validate:"required"`
+	// A list of environment(endpoint) variables used during stack deployment
+	Env []portainer.Pair
+
+	// URL of a Git repository hosting the Stack file
+	RepositoryURL string `example:"https://github.com/openfaas/faas" validate:"required"`
+	// Reference name of a Git repository hosting the Stack file
+	RepositoryReferenceName string `example:"refs/heads/master"`
+	// Use basic authentication to clone the Git repository
+	RepositoryAuthentication bool `example:"true"`
+	// Username used in basic authentication. Required when RepositoryAuthentication is true.
+	RepositoryUsername string `example:"myGitUsername"`
+	// Password used in basic authentication. Required when RepositoryAuthentication is true.
+	RepositoryPassword string `example:"myGitPassword"`
+	// Whether the stack is from a app template
+	FromAppTemplate bool `example:"false"`
+	// Path to the Stack file inside the Git repository
+	ComposeFile string `example:"docker-compose.yml" default:"docker-compose.yml"`
+	// Applicable when deploying with multiple stack files
+	AdditionalFiles []string `example:"[nz.compose.yml, uat.compose.yml]"`
+	// Optional auto update configuration
+	AutoUpdate *portainer.StackAutoUpdate
 }
 
 func (payload *swarmStackFromGitRepositoryPayload) Validate(r *http.Request) error {
@@ -120,84 +128,93 @@ func (payload *swarmStackFromGitRepositoryPayload) Validate(r *http.Request) err
 	if govalidator.IsNull(payload.RepositoryURL) || !govalidator.IsURL(payload.RepositoryURL) {
 		return errors.New("Invalid repository URL. Must correspond to a valid URL format")
 	}
-	if payload.RepositoryAuthentication && (govalidator.IsNull(payload.RepositoryUsername) || govalidator.IsNull(payload.RepositoryPassword)) {
-		return errors.New("Invalid repository credentials. Username and password must be specified when authentication is enabled")
+	if payload.RepositoryAuthentication && govalidator.IsNull(payload.RepositoryPassword) {
+		return errors.New("Invalid repository credentials. Password must be specified when authentication is enabled")
 	}
-	if govalidator.IsNull(payload.ComposeFilePathInRepository) {
-		payload.ComposeFilePathInRepository = filesystem.ComposeFileDefaultName
+	if err := stackutils.ValidateStackAutoUpdate(payload.AutoUpdate); err != nil {
+		return err
 	}
 	return nil
+}
+
+func createStackPayloadFromSwarmGitPayload(name, swarmID, repoUrl, repoReference, repoUsername, repoPassword string, repoAuthentication bool, composeFile string, additionalFiles []string, autoUpdate *portainer.StackAutoUpdate, env []portainer.Pair, fromAppTemplate bool) stackbuilders.StackPayload {
+	return stackbuilders.StackPayload{
+		Name:    name,
+		SwarmID: swarmID,
+		RepositoryConfigPayload: stackbuilders.RepositoryConfigPayload{
+			URL:            repoUrl,
+			ReferenceName:  repoReference,
+			Authentication: repoAuthentication,
+			Username:       repoUsername,
+			Password:       repoPassword,
+		},
+		ComposeFile:     composeFile,
+		AdditionalFiles: additionalFiles,
+		AutoUpdate:      autoUpdate,
+		Env:             env,
+		FromAppTemplate: fromAppTemplate,
+	}
 }
 
 func (handler *Handler) createSwarmStackFromGitRepository(w http.ResponseWriter, r *http.Request, endpoint *portainer.Endpoint, userID portainer.UserID) *httperror.HandlerError {
 	var payload swarmStackFromGitRepositoryPayload
 	err := request.DecodeAndValidateJSONPayload(r, &payload)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid request payload", err}
+		return httperror.BadRequest("Invalid request payload", err)
 	}
 
-	stacks, err := handler.DataStore.Stack().Stacks()
+	payload.Name = handler.SwarmStackManager.NormalizeStackName(payload.Name)
+
+	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, true)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve stacks from the database", err}
+		return httperror.InternalServerError("Unable to check for name collision", err)
+	}
+	if !isUnique {
+		return stackExistsError(payload.Name)
 	}
 
-	for _, stack := range stacks {
-		if strings.EqualFold(stack.Name, payload.Name) {
-			return &httperror.HandlerError{http.StatusConflict, "A stack with this name already exists", errStackAlreadyExists}
+	//make sure the webhook ID is unique
+	if payload.AutoUpdate != nil && payload.AutoUpdate.Webhook != "" {
+		isUnique, err := handler.checkUniqueWebhookID(payload.AutoUpdate.Webhook)
+		if err != nil {
+			return httperror.InternalServerError("Unable to check for webhook ID collision", err)
+		}
+		if !isUnique {
+			return &httperror.HandlerError{StatusCode: http.StatusConflict, Message: fmt.Sprintf("Webhook ID: %s already exists", payload.AutoUpdate.Webhook), Err: stackutils.ErrWebhookIDAlreadyExists}
 		}
 	}
 
-	stackID := handler.DataStore.Stack().GetNextIdentifier()
-	stack := &portainer.Stack{
-		ID:           portainer.StackID(stackID),
-		Name:         payload.Name,
-		Type:         portainer.DockerSwarmStack,
-		SwarmID:      payload.SwarmID,
-		EndpointID:   endpoint.ID,
-		EntryPoint:   payload.ComposeFilePathInRepository,
-		Env:          payload.Env,
-		Status:       portainer.StackStatusActive,
-		CreationDate: time.Now().Unix(),
-	}
-
-	projectPath := handler.FileService.GetStackProjectPath(strconv.Itoa(int(stack.ID)))
-	stack.ProjectPath = projectPath
-
-	gitCloneParams := &cloneRepositoryParameters{
-		url:            payload.RepositoryURL,
-		referenceName:  payload.RepositoryReferenceName,
-		path:           projectPath,
-		authentication: payload.RepositoryAuthentication,
-		username:       payload.RepositoryUsername,
-		password:       payload.RepositoryPassword,
-	}
-
-	doCleanUp := true
-	defer handler.cleanUp(stack, &doCleanUp)
-
-	err = handler.cloneGitRepository(gitCloneParams)
+	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to clone git repository", err}
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	config, configErr := handler.createSwarmDeployConfig(r, stack, endpoint, false)
-	if configErr != nil {
-		return configErr
+	stackPayload := createStackPayloadFromSwarmGitPayload(payload.Name,
+		payload.SwarmID,
+		payload.RepositoryURL,
+		payload.RepositoryReferenceName,
+		payload.RepositoryUsername,
+		payload.RepositoryPassword,
+		payload.RepositoryAuthentication,
+		payload.ComposeFile,
+		payload.AdditionalFiles,
+		payload.AutoUpdate,
+		payload.Env,
+		payload.FromAppTemplate)
+
+	swarmStackBuilder := stackbuilders.CreateSwarmStackGitBuilder(securityContext,
+		handler.DataStore,
+		handler.FileService,
+		handler.GitService,
+		handler.Scheduler,
+		handler.StackDeployer)
+
+	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
+	stack, httpErr := stackBuilderDirector.Build(&stackPayload, endpoint)
+	if httpErr != nil {
+		return httpErr
 	}
 
-	err = handler.deploySwarmStack(config)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, err.Error(), err}
-	}
-
-	stack.CreatedBy = config.user.Username
-
-	err = handler.DataStore.Stack().CreateStack(stack)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the stack inside the database", err}
-	}
-
-	doCleanUp = false
 	return handler.decorateStackResponse(w, stack, userID)
 }
 
@@ -206,6 +223,15 @@ type swarmStackFromFileUploadPayload struct {
 	SwarmID          string
 	StackFileContent []byte
 	Env              []portainer.Pair
+}
+
+func createStackPayloadFromSwarmFileUploadPayload(name, swarmID string, fileContentBytes []byte, env []portainer.Pair) stackbuilders.StackPayload {
+	return stackbuilders.StackPayload{
+		Name:                  name,
+		SwarmID:               swarmID,
+		StackFileContentBytes: fileContentBytes,
+		Env:                   env,
+	}
 }
 
 func (payload *swarmStackFromFileUploadPayload) Validate(r *http.Request) error {
@@ -240,148 +266,37 @@ func (handler *Handler) createSwarmStackFromFileUpload(w http.ResponseWriter, r 
 	payload := &swarmStackFromFileUploadPayload{}
 	err := payload.Validate(r)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid request payload", err}
+		return httperror.BadRequest("Invalid request payload", err)
 	}
 
-	stacks, err := handler.DataStore.Stack().Stacks()
+	payload.Name = handler.SwarmStackManager.NormalizeStackName(payload.Name)
+
+	isUnique, err := handler.checkUniqueStackNameInDocker(endpoint, payload.Name, 0, true)
+
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve stacks from the database", err}
+		return httperror.InternalServerError("Unable to check for name collision", err)
+	}
+	if !isUnique {
+		return stackExistsError(payload.Name)
 	}
 
-	for _, stack := range stacks {
-		if strings.EqualFold(stack.Name, payload.Name) {
-			return &httperror.HandlerError{http.StatusConflict, "A stack with this name already exists", errStackAlreadyExists}
-		}
-	}
-
-	stackID := handler.DataStore.Stack().GetNextIdentifier()
-	stack := &portainer.Stack{
-		ID:           portainer.StackID(stackID),
-		Name:         payload.Name,
-		Type:         portainer.DockerSwarmStack,
-		SwarmID:      payload.SwarmID,
-		EndpointID:   endpoint.ID,
-		EntryPoint:   filesystem.ComposeFileDefaultName,
-		Env:          payload.Env,
-		Status:       portainer.StackStatusActive,
-		CreationDate: time.Now().Unix(),
-	}
-
-	stackFolder := strconv.Itoa(int(stack.ID))
-	projectPath, err := handler.FileService.StoreStackFileFromBytes(stackFolder, stack.EntryPoint, []byte(payload.StackFileContent))
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist Compose file on disk", err}
-	}
-	stack.ProjectPath = projectPath
-
-	doCleanUp := true
-	defer handler.cleanUp(stack, &doCleanUp)
-
-	config, configErr := handler.createSwarmDeployConfig(r, stack, endpoint, false)
-	if configErr != nil {
-		return configErr
-	}
-
-	err = handler.deploySwarmStack(config)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, err.Error(), err}
-	}
-
-	stack.CreatedBy = config.user.Username
-
-	err = handler.DataStore.Stack().CreateStack(stack)
-	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist the stack inside the database", err}
-	}
-
-	doCleanUp = false
-	return handler.decorateStackResponse(w, stack, userID)
-}
-
-type swarmStackDeploymentConfig struct {
-	stack      *portainer.Stack
-	endpoint   *portainer.Endpoint
-	dockerhub  *portainer.DockerHub
-	registries []portainer.Registry
-	prune      bool
-	isAdmin    bool
-	user       *portainer.User
-}
-
-func (handler *Handler) createSwarmDeployConfig(r *http.Request, stack *portainer.Stack, endpoint *portainer.Endpoint, prune bool) (*swarmStackDeploymentConfig, *httperror.HandlerError) {
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
-		return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve info from request context", err}
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
-	dockerhub, err := handler.DataStore.DockerHub().DockerHub()
-	if err != nil {
-		return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve DockerHub details from the database", err}
+	stackPayload := createStackPayloadFromSwarmFileUploadPayload(payload.Name, payload.SwarmID, payload.StackFileContent, payload.Env)
+
+	swarmStackBuilder := stackbuilders.CreateSwarmStackFileUploadBuilder(securityContext,
+		handler.DataStore,
+		handler.FileService,
+		handler.StackDeployer)
+
+	stackBuilderDirector := stackbuilders.NewStackBuilderDirector(swarmStackBuilder)
+	stack, httpErr := stackBuilderDirector.Build(&stackPayload, endpoint)
+	if httpErr != nil {
+		return httpErr
 	}
 
-	registries, err := handler.DataStore.Registry().Registries()
-	if err != nil {
-		return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve registries from the database", err}
-	}
-	filteredRegistries := security.FilterRegistries(registries, securityContext)
-
-	user, err := handler.DataStore.User().User(securityContext.UserID)
-	if err != nil {
-		return nil, &httperror.HandlerError{http.StatusInternalServerError, "Unable to load user information from the database", err}
-	}
-
-	config := &swarmStackDeploymentConfig{
-		stack:      stack,
-		endpoint:   endpoint,
-		dockerhub:  dockerhub,
-		registries: filteredRegistries,
-		prune:      prune,
-		isAdmin:    securityContext.IsAdmin,
-		user:       user,
-	}
-
-	return config, nil
-}
-
-func (handler *Handler) deploySwarmStack(config *swarmStackDeploymentConfig) error {
-	settings, err := handler.DataStore.Settings().Settings()
-	if err != nil {
-		return err
-	}
-
-	isAdminOrEndpointAdmin, err := handler.userIsAdminOrEndpointAdmin(config.user, config.endpoint.ID)
-	if err != nil {
-		return err
-	}
-
-	if !settings.AllowBindMountsForRegularUsers && !isAdminOrEndpointAdmin {
-		composeFilePath := path.Join(config.stack.ProjectPath, config.stack.EntryPoint)
-
-		stackContent, err := handler.FileService.GetFileContent(composeFilePath)
-		if err != nil {
-			return err
-		}
-
-		err = handler.isValidStackFile(stackContent, settings)
-		if err != nil {
-			return err
-		}
-	}
-
-	handler.stackCreationMutex.Lock()
-	defer handler.stackCreationMutex.Unlock()
-
-	handler.SwarmStackManager.Login(config.dockerhub, config.registries, config.endpoint)
-
-	err = handler.SwarmStackManager.Deploy(config.stack, config.prune, config.endpoint)
-	if err != nil {
-		return err
-	}
-
-	err = handler.SwarmStackManager.Logout(config.endpoint)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return handler.decorateStackResponse(w, stack, userID)
 }

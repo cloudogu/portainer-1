@@ -1,44 +1,70 @@
-import angular from 'angular';
+import { map } from 'lodash';
+import EndpointHelper from '@/portainer/helpers/endpointHelper';
+import { getEnvironments } from '@/react/portainer/environments/environment.service';
 
-angular.module('portainer.app').controller('EndpointsController', EndpointsController);
+export class EndpointsController {
+  /* @ngInject */
+  constructor($state, $async, EndpointService, GroupService, ModalService, Notifications, EndpointProvider, StateManager) {
+    Object.assign(this, {
+      $state,
+      $async,
+      EndpointService,
+      GroupService,
+      ModalService,
+      Notifications,
+      EndpointProvider,
+      StateManager,
+    });
 
-function EndpointsController($q, $scope, $state, $async, EndpointService, GroupService, EndpointHelper, Notifications) {
-  $scope.removeAction = removeAction;
+    this.state = {
+      loadingMessage: '',
+    };
 
-  function removeAction(endpoints) {
-    return $async(removeActionAsync, endpoints);
+    this.setLoadingMessage = this.setLoadingMessage.bind(this);
+    this.getPaginatedEndpoints = this.getPaginatedEndpoints.bind(this);
+    this.removeAction = this.removeAction.bind(this);
   }
 
-  async function removeActionAsync(endpoints) {
-    for (let endpoint of endpoints) {
-      try {
-        await EndpointService.deleteEndpoint(endpoint.Id);
+  setLoadingMessage(message) {
+    this.state.loadingMessage = message;
+  }
 
-        Notifications.success('Endpoint successfully removed', endpoint.Name);
-      } catch (err) {
-        Notifications.error('Failure', err, 'Unable to remove endpoint');
+  removeAction(endpoints) {
+    this.ModalService.confirmDeletion('This action will remove all configurations associated to your environment(s). Continue?', (confirmed) => {
+      if (!confirmed) {
+        return;
       }
-    }
+      return this.$async(async () => {
+        try {
+          await Promise.all(endpoints.map(({ Id }) => this.EndpointService.deleteEndpoint(Id)));
+          this.Notifications.success('Environments successfully removed', map(endpoints, 'Name').join(', '));
+        } catch (err) {
+          this.Notifications.error('Failure', err, 'Unable to remove environment');
+        }
 
-    $state.reload();
+        const id = this.EndpointProvider.endpointID();
+        // If the current endpoint was deleted, then clean endpoint store
+        if (endpoints.some((e) => e.Id === id)) {
+          this.StateManager.cleanEndpoint();
+        }
+
+        this.$state.reload();
+      });
+    });
   }
 
-  $scope.getPaginatedEndpoints = getPaginatedEndpoints;
-  function getPaginatedEndpoints(lastId, limit, search) {
-    const deferred = $q.defer();
-    $q.all({
-      endpoints: EndpointService.endpoints(lastId, limit, { search }),
-      groups: GroupService.groups(),
-    })
-      .then(function success(data) {
-        var endpoints = data.endpoints.value;
-        var groups = data.groups;
+  getPaginatedEndpoints(start, limit, search) {
+    return this.$async(async () => {
+      try {
+        const [{ value: endpoints, totalCount }, groups] = await Promise.all([
+          getEnvironments({ start, limit, query: { search, excludeSnapshots: true } }),
+          this.GroupService.groups(),
+        ]);
         EndpointHelper.mapGroupNameToEndpoint(endpoints, groups);
-        deferred.resolve({ endpoints: endpoints, totalCount: data.endpoints.totalCount });
-      })
-      .catch(function error(err) {
-        Notifications.error('Failure', err, 'Unable to retrieve endpoint information');
-      });
-    return deferred.promise;
+        return { endpoints, totalCount };
+      } catch (err) {
+        this.Notifications.error('Failure', err, 'Unable to retrieve environment information');
+      }
+    });
   }
 }

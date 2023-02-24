@@ -3,16 +3,16 @@ package tags
 import (
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
+	"github.com/portainer/portainer/api/dataservices"
+	"github.com/portainer/portainer/api/http/security"
 )
 
 // Handler is the HTTP handler used to handle tag operations.
 type Handler struct {
 	*mux.Router
-	DataStore portainer.DataStore
+	DataStore dataservices.DataStore
 }
 
 // NewHandler creates a handler to manage tag operations.

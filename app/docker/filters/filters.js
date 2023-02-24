@@ -1,4 +1,5 @@
 import _ from 'lodash-es';
+import { joinCommand, trimSHA } from './utils';
 
 function includeString(text, values) {
   return values.some(function (val) {
@@ -190,12 +191,7 @@ angular
     };
   })
   .filter('command', function () {
-    'use strict';
-    return function (command) {
-      if (command) {
-        return command.join(' ');
-      }
-    };
+    return joinCommand;
   })
   .filter('hideshasum', function () {
     'use strict';
@@ -235,49 +231,6 @@ angular
       return runningTasks;
     };
   })
-  .filter('runningcontainers', function () {
-    'use strict';
-    return function runningContainersFilter(containers) {
-      return containers.filter(function (container) {
-        return container.State === 'running';
-      }).length;
-    };
-  })
-  .filter('stoppedcontainers', function () {
-    'use strict';
-    return function stoppedContainersFilter(containers) {
-      return containers.filter(function (container) {
-        return container.State === 'exited';
-      }).length;
-    };
-  })
-  .filter('healthycontainers', function () {
-    'use strict';
-    return function healthyContainersFilter(containers) {
-      return containers.filter(function (container) {
-        return container.Status === 'healthy';
-      }).length;
-    };
-  })
-  .filter('unhealthycontainers', function () {
-    'use strict';
-    return function unhealthyContainersFilter(containers) {
-      return containers.filter(function (container) {
-        return container.Status === 'unhealthy';
-      }).length;
-    };
-  })
-  .filter('imagestotalsize', function () {
-    'use strict';
-    return function (images) {
-      var totalImageSize = 0;
-      for (var i = 0; i < images.length; i++) {
-        var item = images[i];
-        totalImageSize += item.VirtualSize;
-      }
-      return totalImageSize;
-    };
-  })
   .filter('tasknodename', function () {
     'use strict';
     return function (nodeId, nodes) {
@@ -296,13 +249,25 @@ angular
   })
   .filter('trimshasum', function () {
     'use strict';
-    return function (imageName) {
-      if (!imageName) {
-        return;
+    return trimSHA;
+  })
+  .filter('trimversiontag', function () {
+    'use strict';
+    return function trimversiontag(fullName) {
+      if (!fullName) {
+        return fullName;
       }
-      if (imageName.indexOf('sha256:') === 0) {
-        return imageName.substring(7, 19);
+      var versionIdx = fullName.lastIndexOf(':');
+      if (versionIdx < 0) {
+        return fullName;
       }
-      return _.split(imageName, '@sha256')[0];
+      var hostIdx = fullName.indexOf('/');
+      if (hostIdx > versionIdx) {
+        return fullName;
+      }
+      return fullName.substring(0, versionIdx);
     };
+  })
+  .filter('unique', function () {
+    return _.uniqBy;
   });

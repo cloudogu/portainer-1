@@ -14,7 +14,10 @@ angular.module('portainer.docker').controller('CreateNetworkController', [
   'ResourceControlService',
   'FormValidator',
   'HttpRequestHelper',
-  function ($q, $scope, $state, PluginService, Notifications, NetworkService, LabelHelper, Authentication, ResourceControlService, FormValidator, HttpRequestHelper) {
+  'endpoint',
+  function ($q, $scope, $state, PluginService, Notifications, NetworkService, LabelHelper, Authentication, ResourceControlService, FormValidator, HttpRequestHelper, endpoint) {
+    $scope.endpoint = endpoint;
+
     $scope.formValues = {
       DriverOptions: [],
       IPV4: {
@@ -202,6 +205,18 @@ angular.module('portainer.docker').controller('CreateNetworkController', [
       }
     }
 
+    $scope.onChangeInternal = function (enable) {
+      $scope.$evalAsync(() => {
+        $scope.config.Internal = enable;
+      });
+    };
+
+    $scope.onChangeAttachable = function (enable) {
+      $scope.$evalAsync(() => {
+        $scope.config.Attachable = enable;
+      });
+    };
+
     function validateForm(accessControlData, isAdmin) {
       $scope.state.formValidationError = '';
       var error = '';
@@ -227,7 +242,7 @@ angular.module('portainer.docker').controller('CreateNetworkController', [
           return ResourceControlService.applyResourceControl(userId, accessControlData, resourceControl);
         })
         .then(function success() {
-          Notifications.success('Network successfully created');
+          Notifications.success('Success', 'Network successfully created');
           if (context.reload) {
             $state.go(
               'docker.networks',
@@ -239,7 +254,7 @@ angular.module('portainer.docker').controller('CreateNetworkController', [
           }
         })
         .catch(function error(err) {
-          Notifications.error('Failure', err, 'An error occured during network creation');
+          Notifications.error('Failure', err, 'An error occurred during network creation');
         })
         .finally(function final() {
           $scope.state.actionInProgress = false;

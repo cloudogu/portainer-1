@@ -3,10 +3,12 @@ export function KubernetesIngress() {
     Name: '',
     Namespace: '',
     Annotations: {},
-    Host: undefined,
-    PreviousHost: undefined, // only use for RP ingress host edit
+    // Host: undefined,
+    Hosts: [],
+    // PreviousHost: undefined, // only use for RP ingress host edit
     Paths: [],
     IngressClassName: '',
+    TLS: [],
   };
 }
 

@@ -19,46 +19,35 @@ class KubernetesVolumeService {
   /**
    * GET
    */
-  async getAsync(namespace, name) {
-    try {
-      const [pvc, pool] = await Promise.all([await this.KubernetesPersistentVolumeClaimService.get(namespace, name), await this.KubernetesResourcePoolService.get(namespace)]);
-      return KubernetesVolumeConverter.pvcToVolume(pvc, pool);
-    } catch (err) {
-      throw err;
-    }
+  async getAsync(namespace, storageClasses, name) {
+    const [pvc, pool] = await Promise.all([this.KubernetesPersistentVolumeClaimService.get(namespace, storageClasses, name), this.KubernetesResourcePoolService.get(namespace)]);
+    return KubernetesVolumeConverter.pvcToVolume(pvc, pool);
   }
 
-  async getAllAsync(namespace) {
-    try {
-      const pools = await this.KubernetesResourcePoolService.get(namespace);
-      const res = await Promise.all(
-        _.map(pools, async (pool) => {
-          const pvcs = await this.KubernetesPersistentVolumeClaimService.get(pool.Namespace.Name);
-          return _.map(pvcs, (pvc) => KubernetesVolumeConverter.pvcToVolume(pvc, pool));
-        })
-      );
-      return _.flatten(res);
-    } catch (err) {
-      throw err;
-    }
+  async getAllAsync(namespace, storageClasses) {
+    const data = await this.KubernetesResourcePoolService.get(namespace);
+    const pools = data instanceof Array ? data : [data];
+    const res = await Promise.all(
+      _.map(pools, async (pool) => {
+        const pvcs = await this.KubernetesPersistentVolumeClaimService.get(pool.Namespace.Name, storageClasses);
+        return _.map(pvcs, (pvc) => KubernetesVolumeConverter.pvcToVolume(pvc, pool));
+      })
+    );
+    return _.flatten(res);
   }
 
-  get(namespace, name) {
+  get(namespace, storageClasses, name) {
     if (name) {
-      return this.$async(this.getAsync, namespace, name);
+      return this.$async(this.getAsync, namespace, storageClasses, name);
     }
-    return this.$async(this.getAllAsync, namespace);
+    return this.$async(this.getAllAsync, namespace, storageClasses);
   }
 
   /**
    * DELETE
    */
   async deleteAsync(volume) {
-    try {
-      await this.KubernetesPersistentVolumeClaimService.delete(volume.PersistentVolumeClaim);
-    } catch (err) {
-      throw err;
-    }
+    await this.KubernetesPersistentVolumeClaimService.delete(volume.PersistentVolumeClaim);
   }
 
   delete(volume) {

@@ -9,10 +9,12 @@ angular.module('portainer.edge').component('edgeJobForm', {
     model: '=',
     groups: '<',
     tags: '<',
+    edgeGroups: '<',
     addLabelAction: '<',
     removeLabelAction: '<',
     formAction: '<',
     formActionLabel: '@',
     actionInProgress: '<',
+    isEditorDirty: '=',
   },
 });

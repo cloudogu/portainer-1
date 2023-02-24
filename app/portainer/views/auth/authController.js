@@ -1,17 +1,18 @@
 import angular from 'angular';
 import uuidv4 from 'uuid/v4';
+import { getEnvironments } from '@/react/portainer/environments/environment.service';
 
 class AuthenticationController {
   /* @ngInject */
   constructor(
     $async,
+    $analytics,
     $scope,
     $state,
     $stateParams,
     $window,
     Authentication,
     UserService,
-    EndpointService,
     StateManager,
     Notifications,
     SettingsService,
@@ -20,13 +21,13 @@ class AuthenticationController {
     StatusService
   ) {
     this.$async = $async;
+    this.$analytics = $analytics;
     this.$scope = $scope;
     this.$state = $state;
     this.$stateParams = $stateParams;
     this.$window = $window;
     this.Authentication = Authentication;
     this.UserService = UserService;
-    this.EndpointService = EndpointService;
     this.StateManager = StateManager;
     this.Notifications = Notifications;
     this.SettingsService = SettingsService;
@@ -40,6 +41,7 @@ class AuthenticationController {
       Password: '',
     };
     this.state = {
+      passwordInputType: 'password',
       showOAuthLogin: false,
       showStandardLogin: false,
       AuthenticationError: '',
@@ -48,7 +50,6 @@ class AuthenticationController {
     };
 
     this.checkForEndpointsAsync = this.checkForEndpointsAsync.bind(this);
-    this.checkForLatestVersionAsync = this.checkForLatestVersionAsync.bind(this);
     this.postLoginSteps = this.postLoginSteps.bind(this);
 
     this.oAuthLoginAsync = this.oAuthLoginAsync.bind(this);
@@ -58,13 +59,22 @@ class AuthenticationController {
 
     this.manageOauthCodeReturn = this.manageOauthCodeReturn.bind(this);
     this.authEnabledFlowAsync = this.authEnabledFlowAsync.bind(this);
-    this.isTokenValid = this.isTokenValid.bind(this);
     this.onInit = this.onInit.bind(this);
   }
 
   /**
    * UTILS FUNCTIONS SECTION
    */
+
+  toggleShowPassword() {
+    this.state.passwordInputType = this.state.passwordInputType === 'text' ? 'password' : 'text';
+  }
+
+  // set the password input type to password, so that browser autofills don't treat the input as text
+  setPasswordInputType(inputType) {
+    this.state.passwordInputType = inputType;
+    document.getElementById('password').setAttribute('type', inputType);
+  }
 
   logout(error) {
     this.Authentication.logout();
@@ -119,33 +129,30 @@ class AuthenticationController {
 
   async checkForEndpointsAsync() {
     try {
-      return this.$state.go('portainer.home');
-    } catch (err) {
-      this.error(err, 'Unable to retrieve endpoints');
-    }
-  }
+      const isAdmin = this.Authentication.isAdmin();
+      const endpoints = await getEnvironments({ limit: 1 });
 
-  async checkForLatestVersionAsync() {
-    let versionInfo = {
-      UpdateAvailable: false,
-      LatestVersion: '',
-    };
-
-    try {
-      const versionStatus = await this.StatusService.version();
-      if (versionStatus.UpdateAvailable) {
-        versionInfo.UpdateAvailable = true;
-        versionInfo.LatestVersion = versionStatus.LatestVersion;
+      if (this.Authentication.getUserDetails().forceChangePassword) {
+        return this.$state.go('portainer.account');
       }
-    } finally {
-      this.StateManager.setVersionInfo(versionInfo);
+
+      if (endpoints.value.length === 0 && isAdmin) {
+        return this.$state.go('portainer.wizard');
+      } else {
+        return this.$state.go('portainer.home');
+      }
+    } catch (err) {
+      this.error(err, 'Unable to retrieve environments');
     }
   }
 
   async postLoginSteps() {
     await this.StateManager.initialize();
+
+    const isAdmin = this.Authentication.isAdmin();
+    this.$analytics.setUserRole(isAdmin ? 'admin' : 'standard-user');
+
     await this.checkForEndpointsAsync();
-    await this.checkForLatestVersionAsync();
   }
   /**
    * END POST LOGIN STEPS SECTION
@@ -189,6 +196,7 @@ class AuthenticationController {
   }
 
   authenticateUser() {
+    this.setPasswordInputType('password');
     return this.$async(this.authenticateUserAsync);
   }
 
@@ -218,14 +226,6 @@ class AuthenticationController {
     }
   }
 
-  async isTokenValid() {
-    try {
-      return await this.Authentication.OAuthIsTokenValid();
-    } catch (err) {
-      return false;
-    }
-  }
-
   toggleStandardLogin() {
     this.state.showStandardLogin = !this.state.showStandardLogin;
   }
@@ -245,15 +245,28 @@ class AuthenticationController {
         this.generateOAuthLoginURI();
         return;
       }
-
-      if (this.Authentication.isAuthenticated() && (await this.isTokenValid())) {
-        await this.postLoginSteps();
-      } else {
-        this.state.loginInProgress = true;
-        this.LocalStorage.cleanAuthData();
-        this.generateOAuthLoginURI();
-        document.location.href = this.OAuthLoginURI;
+      if (!this.logo) {
+        await this.StateManager.initialize();
+        this.logo = this.StateManager.getState().application.logo;
       }
+      this.generateOAuthLoginURI();
+
+      if (this.$stateParams.logout || this.$stateParams.error) {
+        this.logout(this.$stateParams.error);
+        return;
+      }
+      const error = this.LocalStorage.getLogoutReason();
+      if (error) {
+        this.state.AuthenticationError = error;
+        this.LocalStorage.cleanLogoutReason();
+      }
+
+      if (this.Authentication.isAuthenticated()) {
+        await this.postLoginSteps();
+      }
+      this.state.loginInProgress = false;
+
+      await this.authEnabledFlowAsync();
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve public settings');
     }

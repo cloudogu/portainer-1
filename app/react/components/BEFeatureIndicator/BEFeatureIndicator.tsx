@@ -1,0 +1,44 @@
+import { PropsWithChildren } from 'react';
+import clsx from 'clsx';
+import { Briefcase } from 'lucide-react';
+
+import './BEFeatureIndicator.css';
+
+import { FeatureId } from '@/react/portainer/feature-flags/enums';
+
+import { Icon } from '@@/Icon';
+
+import { getFeatureDetails } from './utils';
+
+export interface Props {
+  featureId?: FeatureId;
+  showIcon?: boolean;
+  className?: string;
+}
+
+export function BEFeatureIndicator({
+  featureId,
+  children,
+  showIcon = true,
+  className = '',
+}: PropsWithChildren<Props>) {
+  const { url, limitedToBE } = getFeatureDetails(featureId);
+
+  if (!limitedToBE) {
+    return null;
+  }
+  return (
+    <a
+      className={clsx('be-indicator vertical-center', className)}
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+      {showIcon && <Icon icon={Briefcase} className="mr-1 be-indicator-icon" />}
+      <span className="be-indicator-label break-words">
+        Business Edition Feature
+      </span>
+    </a>
+  );
+}

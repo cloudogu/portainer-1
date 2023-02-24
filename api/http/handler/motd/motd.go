@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/http/client"
 	"github.com/portainer/libcrypto"
 	"github.com/portainer/libhttp/response"
+	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/http/client"
 )
 
 type motdResponse struct {
@@ -26,6 +26,15 @@ type motdData struct {
 	Style         string            `json:"style"`
 }
 
+// @id MOTD
+// @summary fetches the message of the day
+// @description **Access policy**: restricted
+// @tags motd
+// @security ApiKeyAuth
+// @security jwt
+// @produce json
+// @success 200 {object} motdResponse
+// @router /motd [get]
 func (handler *Handler) motd(w http.ResponseWriter, r *http.Request) {
 	motd, err := client.Get(portainer.MessageOfTheDayURL, 0)
 	if err != nil {

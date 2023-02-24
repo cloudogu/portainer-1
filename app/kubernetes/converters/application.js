@@ -1,4 +1,4 @@
-import * as _ from 'lodash-es';
+import _ from 'lodash-es';
 import filesizeParser from 'filesize-parser';
 
 import {
@@ -14,6 +14,8 @@ import {
   KubernetesPortainerApplicationNote,
   KubernetesPortainerApplicationOwnerLabel,
   KubernetesPortainerApplicationStackNameLabel,
+  KubernetesPortainerApplicationStackIdLabel,
+  KubernetesPortainerApplicationKindLabel,
 } from 'Kubernetes/models/application/models';
 import { KubernetesServiceTypes } from 'Kubernetes/models/service/models';
 import KubernetesResourceReservationHelper from 'Kubernetes/helpers/resourceReservationHelper';
@@ -54,12 +56,25 @@ class KubernetesApplicationConverter {
     const containers = data.spec.template ? _.without(_.concat(data.spec.template.spec.containers, data.spec.template.spec.initContainers), undefined) : data.spec.containers;
     res.Id = data.metadata.uid;
     res.Name = data.metadata.name;
-    res.StackName = data.metadata.labels ? data.metadata.labels[KubernetesPortainerApplicationStackNameLabel] || '-' : '-';
-    res.ApplicationOwner = data.metadata.labels ? data.metadata.labels[KubernetesPortainerApplicationOwnerLabel] || '' : '';
+    res.Metadata = data.metadata;
+
+    if (data.metadata.labels) {
+      const { labels } = data.metadata;
+      res.StackId = labels[KubernetesPortainerApplicationStackIdLabel] ? parseInt(labels[KubernetesPortainerApplicationStackIdLabel], 10) : null;
+      res.StackName = labels[KubernetesPortainerApplicationStackNameLabel] || '';
+      res.ApplicationKind = labels[KubernetesPortainerApplicationKindLabel] || '';
+      res.ApplicationOwner = labels[KubernetesPortainerApplicationOwnerLabel] || '';
+      res.ApplicationName = labels[KubernetesPortainerApplicationNameLabel] || res.Name;
+    }
+
     res.Note = data.metadata.annotations ? data.metadata.annotations[KubernetesPortainerApplicationNote] || '' : '';
-    res.ApplicationName = data.metadata.labels ? data.metadata.labels[KubernetesPortainerApplicationNameLabel] || res.Name : res.Name;
     res.ResourcePool = data.metadata.namespace;
-    res.Image = containers[0].image;
+    if (containers.length) {
+      res.Image = containers[0].image;
+    }
+    if (data.spec.template && data.spec.template.spec && data.spec.template.spec.imagePullSecrets && data.spec.template.spec.imagePullSecrets.length) {
+      res.RegistryId = parseInt(data.spec.template.spec.imagePullSecrets[0].name.replace('registry-', ''), 10);
+    }
     res.CreationDate = data.metadata.creationTimestamp;
     res.Env = _.without(_.flatMap(_.map(containers, 'env')), undefined);
     res.Pods = data.spec.selector ? KubernetesApplicationHelper.associatePodsAndApplication(pods, data.spec.selector) : [data];
@@ -105,6 +120,8 @@ class KubernetesApplicationConverter {
       res.ServiceType = serviceType;
       res.ServiceId = service.metadata.uid;
       res.ServiceName = service.metadata.name;
+      res.ClusterIp = service.spec.clusterIP;
+      res.ExternalIp = service.spec.externalIP;
 
       if (serviceType === KubernetesServiceTypes.LOAD_BALANCER) {
         if (service.status.loadBalancer.ingress && service.status.loadBalancer.ingress.length > 0) {
@@ -259,14 +276,17 @@ class KubernetesApplicationConverter {
     return res;
   }
 
-  static applicationToFormValues(app, resourcePools, configurations, persistentVolumeClaims, nodesLabels) {
+  static applicationToFormValues(app, resourcePools, configurations, persistentVolumeClaims, nodesLabels, ingresses) {
     const res = new KubernetesApplicationFormValues();
     res.ApplicationType = app.ApplicationType;
     res.ResourcePool = _.find(resourcePools, ['Namespace.Name', app.ResourcePool]);
     res.Name = app.Name;
+    res.Services = KubernetesApplicationHelper.generateServicesFormValuesFromServices(app);
+    res.Selector = KubernetesApplicationHelper.generateSelectorFromService(app);
     res.StackName = app.StackName;
     res.ApplicationOwner = app.ApplicationOwner;
-    res.Image = app.Image;
+    res.ImageModel.Image = app.Image;
+    res.ImageModel.Registry.Id = app.RegistryId;
     res.ReplicaCount = app.TotalPodsCount;
     res.MemoryLimit = KubernetesResourceReservationHelper.megaBytesValue(app.Limits.Memory);
     res.CpuLimit = app.Limits.Cpu;
@@ -276,21 +296,24 @@ class KubernetesApplicationConverter {
     res.PersistedFolders = KubernetesApplicationHelper.generatePersistedFoldersFormValuesFromPersistedFolders(app.PersistedFolders, persistentVolumeClaims); // generate from PVC and app.PersistedFolders
     res.Configurations = KubernetesApplicationHelper.generateConfigurationFormValuesFromEnvAndVolumes(app.Env, app.ConfigurationVolumes, configurations);
     res.AutoScaler = KubernetesApplicationHelper.generateAutoScalerFormValueFromHorizontalPodAutoScaler(app.AutoScaler, res.ReplicaCount);
-    res.PublishedPorts = KubernetesApplicationHelper.generatePublishedPortsFormValuesFromPublishedPorts(app.ServiceType, app.PublishedPorts);
+    res.PublishedPorts = KubernetesApplicationHelper.generatePublishedPortsFormValuesFromPublishedPorts(app.ServiceType, app.PublishedPorts, ingresses);
     res.Containers = app.Containers;
 
     const isIngress = _.filter(res.PublishedPorts, (p) => p.IngressName).length;
     if (app.ServiceType === KubernetesServiceTypes.LOAD_BALANCER) {
       res.PublishingType = KubernetesApplicationPublishingTypes.LOAD_BALANCER;
     } else if (app.ServiceType === KubernetesServiceTypes.NODE_PORT) {
-      res.PublishingType = KubernetesApplicationPublishingTypes.CLUSTER;
+      res.PublishingType = KubernetesApplicationPublishingTypes.NODE_PORT;
     } else if (app.ServiceType === KubernetesServiceTypes.CLUSTER_IP && isIngress) {
       res.PublishingType = KubernetesApplicationPublishingTypes.INGRESS;
     } else {
-      res.PublishingType = KubernetesApplicationPublishingTypes.INTERNAL;
+      res.PublishingType = KubernetesApplicationPublishingTypes.CLUSTER_IP;
     }
 
-    KubernetesApplicationHelper.generatePlacementsFormValuesFromAffinity(res, app.Pods[0].Affinity, nodesLabels);
+    if (app.Pods && app.Pods.length) {
+      KubernetesApplicationHelper.generatePlacementsFormValuesFromAffinity(res, app.Pods[0].Affinity, nodesLabels);
+    }
+
     return res;
   }
 
@@ -298,7 +321,7 @@ class KubernetesApplicationConverter {
     formValues.ApplicationOwner = KubernetesCommonHelper.ownerToLabel(formValues.ApplicationOwner);
 
     const claims = KubernetesPersistentVolumeClaimConverter.applicationFormValuesToVolumeClaims(formValues);
-    const rwx = _.find(claims, (item) => _.includes(item.StorageClass.AccessModes, 'RWX')) !== undefined;
+    const rwx = KubernetesApplicationHelper.hasRWX(claims);
 
     const deployment =
       (formValues.DeploymentType === KubernetesApplicationDeploymentTypes.REPLICATED &&
@@ -337,7 +360,9 @@ class KubernetesApplicationConverter {
       service = undefined;
     }
 
-    return [app, headlessService, service, claims];
+    let services = KubernetesServiceConverter.applicationFormValuesToServices(formValues);
+
+    return [app, headlessService, services, service, claims];
   }
 }
 

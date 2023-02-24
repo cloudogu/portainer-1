@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/gitlab"
+	"github.com/portainer/portainer/api/http/proxy/factory/gitlab"
 )
 
 func newGitlabProxy(uri string) (http.Handler, error) {

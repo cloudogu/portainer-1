@@ -13,7 +13,10 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
   'Notifications',
   'FormValidator',
   'HttpRequestHelper',
-  function ($q, $scope, $state, VolumeService, PluginService, ResourceControlService, Authentication, Notifications, FormValidator, HttpRequestHelper) {
+  'endpoint',
+  function ($q, $scope, $state, VolumeService, PluginService, ResourceControlService, Authentication, Notifications, FormValidator, HttpRequestHelper, endpoint) {
+    $scope.endpoint = endpoint;
+
     $scope.formValues = {
       Driver: 'local',
       DriverOptions: [],
@@ -37,6 +40,24 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
     $scope.removeDriverOption = function (index) {
       $scope.formValues.DriverOptions.splice(index, 1);
     };
+
+    $scope.onUseNFSChange = onUseNFSChange;
+
+    function onUseNFSChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.formValues.NFSData.useNFS = checked;
+        $scope.formValues.CIFSData.useCIFS = false;
+      });
+    }
+
+    $scope.onUseCIFSChange = onUseCIFSChange;
+
+    function onUseCIFSChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.formValues.CIFSData.useCIFS = checked;
+        $scope.formValues.NFSData.useNFS = false;
+      });
+    }
 
     function validateForm(accessControlData, isAdmin) {
       $scope.state.formValidationError = '';
@@ -63,16 +84,19 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
       driverOptions.push({ name: 'device', value: device });
 
       const versionNumber = data.versionsNumber[data.versions.indexOf(data.version)];
-      const options = 'username=' + data.username + ',password=' + data.password + ',vers=' + versionNumber;
+      const options = 'addr=' + data.serverAddress + ',username=' + data.username + ',password=' + data.password + ',vers=' + versionNumber;
       driverOptions.push({ name: 'o', value: options });
     }
 
     function prepareNFSConfiguration(driverOptions) {
       var data = $scope.formValues.NFSData;
 
-      driverOptions.push({ name: 'type', value: data.version.toLowerCase() });
+      driverOptions.push({ name: 'type', value: 'nfs' });
 
       var options = 'addr=' + data.serverAddress + ',' + data.options;
+      if (data.version === 'NFS4') {
+        options = options + ',nfsvers=4';
+      }
       driverOptions.push({ name: 'o', value: options });
 
       var mountPoint = data.mountPoint[0] === ':' ? data.mountPoint : ':' + data.mountPoint;
@@ -83,11 +107,6 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
       var name = $scope.formValues.Name;
       var driver = $scope.formValues.Driver;
       var driverOptions = $scope.formValues.DriverOptions;
-      var storidgeProfile = $scope.formValues.StoridgeProfile;
-
-      if (driver === 'cio:latest' && storidgeProfile) {
-        driverOptions.push({ name: 'profile', value: storidgeProfile.Name });
-      }
 
       if ($scope.formValues.NFSData.useNFS) {
         prepareNFSConfiguration(driverOptions);
@@ -117,11 +136,11 @@ angular.module('portainer.docker').controller('CreateVolumeController', [
           return ResourceControlService.applyResourceControl(userId, accessControlData, resourceControl);
         })
         .then(function success() {
-          Notifications.success('Volume successfully created');
+          Notifications.success('Success', 'Volume successfully created');
           $state.go('docker.volumes', {}, { reload: true });
         })
         .catch(function error(err) {
-          Notifications.error('Failure', err, 'An error occured during volume creation');
+          Notifications.error('Failure', err, 'An error occurred during volume creation');
         })
         .finally(function final() {
           $scope.state.actionInProgress = false;

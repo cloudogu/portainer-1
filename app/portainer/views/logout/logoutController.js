@@ -2,10 +2,11 @@ import angular from 'angular';
 
 class LogoutController {
   /* @ngInject */
-  constructor($async, $state, $transition$, Authentication, StateManager, Notifications, LocalStorage, SettingsService) {
+  constructor($async, $state, $transition$, $window, Authentication, StateManager, Notifications, LocalStorage, SettingsService) {
     this.$async = $async;
     this.$state = $state;
     this.$transition$ = $transition$;
+    this.$window = $window;
 
     this.Authentication = Authentication;
     this.StateManager = StateManager;
@@ -25,12 +26,17 @@ class LogoutController {
   async logoutAsync() {
     const error = this.$transition$.params().error;
     const performApiLogout = this.$transition$.params().performApiLogout;
+    const settings = await this.SettingsService.publicSettings();
+
     try {
       await this.Authentication.logout(performApiLogout);
-      const settings = await this.SettingsService.publicSettings();
-      document.location.href = settings.OAuthLogoutURI;
     } finally {
       this.LocalStorage.storeLogoutReason(error);
+      if (settings.OAuthLogoutURI && this.Authentication.getUserDetails().ID !== 1) {
+        this.$window.location.href = settings.OAuthLogoutURI;
+      } else {
+        this.$state.go('portainer.auth', { reload: true });
+      }
     }
   }
 
@@ -46,7 +52,7 @@ class LogoutController {
     try {
       await this.logout();
     } catch (err) {
-      this.Notifications.error('Failure', err, 'An error occured during logout');
+      this.Notifications.error('Failure', err, 'An error occurred during logout');
     }
   }
 

@@ -1,10 +1,8 @@
 <div ng-if="service.ServiceMounts" id="service-mounts">
   <rd-widget>
-    <rd-widget-header icon="fa-tasks" title-text="Mounts">
+    <rd-widget-header icon="list" title-text="Mounts">
       <div class="nopadding" authorization="DockerServiceUpdate">
-        <a class="btn btn-default btn-sm pull-right" ng-click="isUpdating ||addMount(service)" ng-disabled="isUpdating">
-          <i class="fa fa-plus-circle" aria-hidden="true"></i> mount
-        </a>
+        <a class="btn btn-secondary btn-sm pull-right" ng-click="isUpdating ||addMount(service)" ng-disabled="isUpdating"> <pr-icon icon="'plus'"></pr-icon> mount </a>
       </div>
     </rd-widget-header>
     <rd-widget-body ng-if="service.ServiceMounts.length === 0">
@@ -24,7 +22,14 @@
         <tbody>
           <tr ng-repeat="mount in service.ServiceMounts">
             <td ng-if="isAdmin || allowBindMounts">
-              <select name="mountType" class="form-control" ng-model="mount.Type" ng-disabled="isUpdating" disable-authorization="DockerServiceUpdate">
+              <select
+                name="mountType"
+                class="form-control"
+                ng-model="mount.Type"
+                ng-change="onChangeMountType(service, mount)"
+                ng-disabled="isUpdating"
+                disable-authorization="DockerServiceUpdate"
+              >
                 <option value="volume">Volume</option>
                 <option value="bind">Bind</option>
               </select>
@@ -33,6 +38,7 @@
               <select
                 class="form-control"
                 ng-model="mount.Source"
+                ng-change="updateMount(service, mount)"
                 ng-options="vol.Id as ((vol.Id|truncate:30) + ' - ' + (vol.Driver|truncate:30))  for vol in availableVolumes"
                 ng-if="mount.Type === 'volume'"
                 disable-authorization="DockerServiceUpdate"
@@ -49,7 +55,7 @@
                 ng-disabled="isUpdating || (!isAdmin && !allowBindMounts && mount.Type === 'bind')"
                 ng-if="mount.Type === 'bind'"
               />
-              <div class="col-sm-12 small text-warning" ng-show="!mount.Source"> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Source is required. </div>
+              <div class="col-sm-12 small text-warning" ng-show="!mount.Source"> <pr-icon icon="'alert-triangle'" mode="'warning'"></pr-icon> Source is required. </div>
             </td>
             <td>
               <input
@@ -61,15 +67,15 @@
                 ng-disabled="isUpdating"
                 disable-authorization="DockerServiceUpdate"
               />
-              <div class="col-sm-12 small text-warning" ng-show="!mount.Target"> <i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Target is required. </div>
+              <div class="col-sm-12 small text-warning" ng-show="!mount.Target"> <pr-icon icon="'alert-triangle'" mode="'warning'"></pr-icon> Target is required. </div>
             </td>
             <td authorization="DockerServiceUpdate">
               <input type="checkbox" class="form-control" ng-model="mount.ReadOnly" ng-change="updateMount(service, mount)" ng-disabled="isUpdating" />
             </td>
             <td authorization="DockerServiceUpdate">
               <span class="input-group-btn">
-                <button class="btn btn-sm btn-danger" type="button" ng-click="removeMount(service, $index)" ng-disabled="isUpdating">
-                  <i class="fa fa-trash" aria-hidden="true"></i>
+                <button class="btn btn-dangerlight" type="button" ng-click="removeMount(service, $index)" ng-disabled="isUpdating">
+                  <pr-icon icon="'trash-2'" size="'md'"></pr-icon>
                 </button>
               </span>
             </td>

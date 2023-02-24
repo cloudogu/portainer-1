@@ -1,10 +1,27 @@
 import _ from 'lodash';
 import { AccessControlFormData } from 'Portainer/components/accessControlForm/porAccessControlFormModel';
+import { TEMPLATE_NAME_VALIDATION_REGEX } from '@/constants';
+import { getTemplateVariables, intersectVariables } from '@/react/portainer/custom-templates/components/utils';
+import { isBE } from '@/react/portainer/feature-flags/feature-flags.service';
 
 class CreateCustomTemplateViewController {
   /* @ngInject */
-  constructor($async, $state, Authentication, CustomTemplateService, FormValidator, Notifications, ResourceControlService, StackService, StateManager) {
-    Object.assign(this, { $async, $state, Authentication, CustomTemplateService, FormValidator, Notifications, ResourceControlService, StackService, StateManager });
+  constructor($async, $state, $window, Authentication, ModalService, CustomTemplateService, FormValidator, Notifications, ResourceControlService, StackService, StateManager) {
+    Object.assign(this, {
+      $async,
+      $state,
+      $window,
+      Authentication,
+      ModalService,
+      CustomTemplateService,
+      FormValidator,
+      Notifications,
+      ResourceControlService,
+      StackService,
+      StateManager,
+    });
+
+    this.isTemplateVariablesEnabled = isBE;
 
     this.formValues = {
       Title: '',
@@ -18,9 +35,11 @@ class CreateCustomTemplateViewController {
       ComposeFilePathInRepository: 'docker-compose.yml',
       Description: '',
       Note: '',
+      Logo: '',
       Platform: 1,
       Type: 1,
       AccessControlData: new AccessControlFormData(),
+      Variables: [],
     };
 
     this.state = {
@@ -29,7 +48,11 @@ class CreateCustomTemplateViewController {
       actionInProgress: false,
       fromStack: false,
       loading: true,
+      isEditorDirty: false,
+      templateNameRegex: TEMPLATE_NAME_VALIDATION_REGEX,
+      isTemplateValid: true,
     };
+
     this.templates = [];
 
     this.createCustomTemplate = this.createCustomTemplate.bind(this);
@@ -41,6 +64,21 @@ class CreateCustomTemplateViewController {
     this.createCustomTemplateFromGitRepository = this.createCustomTemplateFromGitRepository.bind(this);
     this.editorUpdate = this.editorUpdate.bind(this);
     this.onChangeMethod = this.onChangeMethod.bind(this);
+    this.onVariablesChange = this.onVariablesChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  onVariablesChange(value) {
+    this.handleChange({ Variables: value });
+  }
+
+  handleChange(values) {
+    return this.$async(async () => {
+      this.formValues = {
+        ...this.formValues,
+        ...values,
+      };
+    });
   }
 
   createCustomTemplate() {
@@ -49,6 +87,7 @@ class CreateCustomTemplateViewController {
 
   onChangeMethod() {
     this.formValues.FileContent = '';
+    this.formValues.Variables = [];
     this.selectedTemplate = null;
   }
 
@@ -65,14 +104,15 @@ class CreateCustomTemplateViewController {
 
     this.state.actionInProgress = true;
     try {
-      const { ResourceControl } = await this.createCustomTemplateByMethod(method);
+      const customTemplate = await this.createCustomTemplateByMethod(method);
 
       const accessControlData = this.formValues.AccessControlData;
       const userDetails = this.Authentication.getUserDetails();
       const userId = userDetails.ID;
-      await this.ResourceControlService.applyResourceControl(userId, accessControlData, ResourceControl);
+      await this.ResourceControlService.applyResourceControl(userId, accessControlData, customTemplate.ResourceControl);
 
-      this.Notifications.success('Custom template successfully created');
+      this.Notifications.success('Success', 'Custom template successfully created');
+      this.state.isEditorDirty = false;
       this.$state.go('docker.templates.custom');
     } catch (err) {
       this.Notifications.error('Failure', err, 'A template with the same name already exists');
@@ -131,8 +171,26 @@ class CreateCustomTemplateViewController {
     return this.CustomTemplateService.createCustomTemplateFromGitRepository(this.formValues);
   }
 
-  editorUpdate(cm) {
-    this.formValues.FileContent = cm.getValue();
+  editorUpdate(value) {
+    this.formValues.FileContent = value;
+    this.state.isEditorDirty = true;
+    this.parseTemplate(value);
+  }
+
+  parseTemplate(templateStr) {
+    if (!this.isTemplateVariablesEnabled) {
+      return;
+    }
+
+    const variables = getTemplateVariables(templateStr);
+
+    const isValid = !!variables;
+
+    this.state.isTemplateValid = isValid;
+
+    if (isValid) {
+      this.onVariablesChange(intersectVariables(this.formValues.Variables, variables));
+    }
   }
 
   async $onInit() {
@@ -155,12 +213,28 @@ class CreateCustomTemplateViewController {
     }
 
     try {
-      this.templates = await this.CustomTemplateService.customTemplates();
+      this.templates = await this.CustomTemplateService.customTemplates([1, 2]);
     } catch (err) {
       this.Notifications.error('Failure loading', err, 'Failed loading custom templates');
     }
 
     this.state.loading = false;
+
+    this.$window.onbeforeunload = () => {
+      if (this.state.Method === 'editor' && this.formValues.FileContent && this.state.isEditorDirty) {
+        return '';
+      }
+    };
+  }
+
+  $onDestroy() {
+    this.state.isEditorDirty = false;
+  }
+
+  async uiCanExit() {
+    if (this.state.Method === 'editor' && this.formValues.FileContent && this.state.isEditorDirty) {
+      return this.ModalService.confirmWebEditorDiscard();
+    }
   }
 }
 

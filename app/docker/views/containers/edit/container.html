@@ -1,9 +1,4 @@
-<rd-header>
-  <rd-header-title title-text="Container details"> </rd-header-title>
-  <rd-header-content>
-    <a ui-sref="docker.containers">Containers</a> &gt; <a ui-sref="docker.containers.container({id: container.Id})">{{ container.Name | trimcontainername }}</a>
-  </rd-header-content>
-</rd-header>
+<page-header title="'Container details'" breadcrumbs="[{label:'Containers', link:'docker.containers'}, (container.Name | trimcontainername)]"> </page-header>
 
 <div
   class="row"
@@ -11,44 +6,60 @@
 >
   <div class="col-lg-12 col-md-12 col-xs-12">
     <rd-widget>
-      <rd-widget-header icon="fa-cogs" title-text="Actions"></rd-widget-header>
+      <rd-widget-header icon="settings" title-text="Actions"></rd-widget-header>
       <rd-widget-body classes="padding">
         <div class="btn-group" role="group" aria-label="...">
-          <button authorization="DockerContainerStart" class="btn btn-success btn-sm" ng-click="start()" ng-disabled="container.State.Running"
-            ><i class="fa fa-play space-right" aria-hidden="true"></i>Start</button
+          <button authorization="DockerContainerStart" class="btn btn-light btn-sm" ng-click="start()" ng-disabled="container.State.Running || container.IsPortainer">
+            <pr-icon icon="'play'"></pr-icon>
+            Start
+          </button>
+          <button authorization="DockerContainerStop" class="btn btn-light btn-sm" ng-click="stop()" ng-disabled="!container.State.Running || container.IsPortainer">
+            <pr-icon icon="'square'"></pr-icon>
+            Stop
+          </button>
+          <button authorization="DockerContainerKill" class="btn btn-light btn-sm" ng-click="kill()" ng-disabled="!container.State.Running || container.IsPortainer">
+            <pr-icon icon="'bomb'"></pr-icon>
+            Kill
+          </button>
+          <button authorization="DockerContainerRestart" class="btn btn-light btn-sm" ng-click="restart()" ng-disabled="!container.State.Running || container.IsPortainer">
+            <pr-icon icon="'refresh-cw'"></pr-icon>
+            Restart</button
           >
-          <button authorization="DockerContainerStop" class="btn btn-danger btn-sm" ng-click="stop()" ng-disabled="!container.State.Running"
-            ><i class="fa fa-stop space-right" aria-hidden="true"></i>Stop</button
+          <button
+            authorization="DockerContainerPause"
+            class="btn btn-light btn-sm"
+            ng-click="pause()"
+            ng-disabled="!container.State.Running || container.State.Paused || container.IsPortainer"
           >
-          <button authorization="DockerContainerKill" class="btn btn-danger btn-sm" ng-click="kill()" ng-disabled="!container.State.Running"
-            ><i class="fa fa-bomb space-right" aria-hidden="true"></i>Kill</button
+            <pr-icon icon="'pause'"></pr-icon>
+            Pause</button
           >
-          <button authorization="DockerContainerRestart" class="btn btn-primary btn-sm" ng-click="restart()" ng-disabled="!container.State.Running"
-            ><i class="fa fa-sync space-right" aria-hidden="true"></i>Restart</button
+          <button authorization="DockerContainerUnpause" class="btn btn-light btn-sm" ng-click="unpause()" ng-disabled="!container.State.Paused || container.IsPortainer">
+            <pr-icon icon="'play'"></pr-icon>
+            Resume</button
           >
-          <button authorization="DockerContainerPause" class="btn btn-primary btn-sm" ng-click="pause()" ng-disabled="!container.State.Running || container.State.Paused"
-            ><i class="fa fa-pause space-right" aria-hidden="true"></i>Pause</button
-          >
-          <button authorization="DockerContainerUnpause" class="btn btn-primary btn-sm" ng-click="unpause()" ng-disabled="!container.State.Paused"
-            ><i class="fa fa-play space-right" aria-hidden="true"></i>Resume</button
-          >
-          <button authorization="DockerContainerDelete" class="btn btn-danger btn-sm" ng-click="confirmRemove()"
-            ><i class="fa fa-trash-alt space-right" aria-hidden="true"></i>Remove</button
+          <button authorization="DockerContainerDelete" class="btn btn-dangerlight btn-sm" ng-click="confirmRemove()" ng-disabled="container.IsPortainer">
+            <pr-icon icon="'trash-2'"></pr-icon>
+            Remove</button
           >
         </div>
         <div class="btn-group" role="group" aria-label="..." ng-if="displayRecreateButton" authorization="DockerContainerCreate">
           <button
             type="button"
-            class="btn btn-danger btn-sm"
-            ng-disabled="state.recreateContainerInProgress"
+            class="btn btn-light btn-sm"
+            ng-disabled="state.recreateContainerInProgress || container.IsPortainer"
             ng-click="recreate()"
             button-spinner="state.recreateContainerInProgress"
           >
-            <span ng-hide="state.recreateContainerInProgress"><i class="fa fa-sync space-right" aria-hidden="true"></i>Recreate</span>
+            <span ng-hide="state.recreateContainerInProgress" class="flex items-center">
+              <pr-icon icon="'refresh-cw'" class-name="'!mr-1'"></pr-icon>
+              Recreate</span
+            >
             <span ng-show="state.recreateContainerInProgress">Recreation in progress...</span>
           </button>
-          <a class="btn btn-primary btn-sm" type="button" ui-sref="docker.containers.new({ from: container.Id, nodeName: nodeName })"
-            ><i class="fa fa-copy space-right" aria-hidden="true"></i>Duplicate/Edit</a
+          <a class="btn btn-light btn-sm" type="button" ui-sref="docker.containers.new({ from: container.Id, nodeName: nodeName })" ng-disabled="container.IsPortainer">
+            <pr-icon icon="'copy'"></pr-icon>
+            Duplicate/Edit</a
           >
         </div>
       </rd-widget-body>
@@ -59,25 +70,31 @@
 <div class="row">
   <div class="col-lg-12 col-md-12 col-xs-12">
     <rd-widget>
-      <rd-widget-header icon="fa-server" title-text="Container status"></rd-widget-header>
+      <rd-widget-header icon="box" title-text="Container status"></rd-widget-header>
       <rd-widget-body classes="no-padding">
         <table class="table">
           <tbody>
             <tr>
-              <td>ID</td>
+              <td class="col-xs-6 col-sm-4 col-md-3 col-lg-3">ID</td>
               <td>{{ container.Id }}</td>
             </tr>
             <tr>
               <td>Name</td>
               <td ng-if="!container.edit">
                 {{ container.Name | trimcontainername }}
-                <a authorization="DockerContainerRename" href="" data-toggle="tooltip" title="Edit container name" ng-click="container.edit = true;"><i class="fa fa-edit"></i></a>
+                <a authorization="DockerContainerRename" href="" data-toggle="tooltip" title="Edit container name" ng-click="container.edit = true;"
+                  ><pr-icon icon="'edit'" class-name="'space-right'"></pr-icon
+                ></a>
               </td>
               <td ng-if="container.edit">
                 <form ng-submit="renameContainer()">
                   <input type="text" class="containerNameInput" ng-model="container.newContainerName" />
-                  <a href="" ng-click="container.edit = false;"><i class="fa fa-times"></i></a>
-                  <a href="" ng-click="renameContainer()"><i class="fa fa-check-square"></i></a>
+                  <a href="" ng-click="container.edit = false;">
+                    <pr-icon icon="'x'"></pr-icon>
+                  </a>
+                  <a href="" ng-click="renameContainer()">
+                    <pr-icon icon="'check'"></pr-icon>
+                  </a>
                 </form>
               </td>
             </tr>
@@ -88,8 +105,8 @@
             <tr>
               <td>Status</td>
               <td>
-                <i class="fa fa-heartbeat space-right green-icon" ng-if="container.State.Running"></i>
-                <i class="fa fa-heartbeat space-right red-icon" ng-if="!container.State.Running && container.State.Status !== 'created'"></i>
+                <pr-icon ng-if="container.State.Running" icon="'heart-pulse'" mode="'success'"></pr-icon>
+                <pr-icon ng-if="!container.State.Running && container.State.Status !== 'created'" icon="'heart-pulse'" mode="'danger'"></pr-icon>
                 {{ container.State | getstatetext }} for {{ activityTime
                 }}<span ng-if="!container.State.Running && container.State.Status !== 'created'"> with exit code {{ container.State.ExitCode }}</span>
               </td>
@@ -106,23 +123,37 @@
               <td>Finished</td>
               <td>{{ container.State.FinishedAt | getisodate }}</td>
             </tr>
+            <tr ng-if="isAdmin && displayCreateWebhookButton && applicationState.endpoint.type !== 4">
+              <td colspan="6">
+                <div class="form-group">
+                  <div class="col-sm-12">
+                    <por-switch-field
+                      tooltip="'Webhook (or callback URI) used to automate the recreation of this container. Sending a POST request to this callback URI (without requiring any authentication) will pull the most up-to-date version of the associated image and recreate this container.'"
+                      label-class="'col-sm-2'"
+                      label="'Container webhook'"
+                      feature-id="'container-webhook'"
+                    ></por-switch-field>
+                  </div>
+                </div>
+              </td>
+            </tr>
             <tr authorization="DockerContainerLogs, DockerContainerInspect, DockerContainerStats, DockerExecStart">
               <td colspan="2">
                 <div class="btn-group" role="group" aria-label="...">
                   <a authorization="DockerContainerLogs" class="btn" type="button" ui-sref="docker.containers.container.logs({ id: container.Id })"
-                    ><i class="fa fa-file-alt space-right" aria-hidden="true"></i>Logs</a
+                    ><pr-icon icon="'file-text'" class-name="'space-right'"></pr-icon>Logs</a
                   >
                   <a authorization="DockerContainerInspect" class="btn" type="button" ui-sref="docker.containers.container.inspect({ id: container.Id })"
-                    ><i class="fa fa-info-circle space-right" aria-hidden="true"></i>Inspect</a
+                    ><pr-icon icon="'info'" class-name="'space-right'"></pr-icon>Inspect</a
                   >
                   <a authorization="DockerContainerStats" class="btn" type="button" ui-sref="docker.containers.container.stats({ id: container.Id })"
-                    ><i class="fa fa-chart-area space-right" aria-hidden="true"></i>Stats</a
+                    ><pr-icon icon="'bar-chart'" class-name="'space-right'"></pr-icon>Stats</a
                   >
                   <a authorization="DockerExecStart" class="btn" type="button" ui-sref="docker.containers.container.exec({ id: container.Id })"
-                    ><i class="fa fa-terminal space-right" aria-hidden="true"></i>Console</a
+                    ><pr-icon icon="'terminal'" class-name="'space-right'"></pr-icon>Console</a
                   >
                   <a authorization="DockerContainerAttach" class="btn" type="button" ui-sref="docker.containers.container.attach({ id: container.Id })"
-                    ><i class="fa fa-plug space-right" aria-hidden="true"></i>Attach</a
+                    ><pr-icon icon="'paperclip'" class-name="'space-right'"></pr-icon>Attach</a
                   >
                 </div>
               </td>
@@ -135,48 +166,22 @@
 </div>
 
 <!-- access-control-panel -->
-<por-access-control-panel ng-if="container" resource-id="container.Id" resource-control="container.ResourceControl" resource-type="'container'"> </por-access-control-panel>
+<access-control-panel
+  ng-if="container"
+  resource-id="container.Id"
+  resource-control="container.ResourceControl"
+  resource-type="resourceType"
+  on-update-success="(onUpdateResourceControlSuccess)"
+>
+</access-control-panel>
 <!-- !access-control-panel -->
 
-<div ng-if="container.State.Health" class="row">
-  <div class="col-lg-12 col-md-12 col-xs-12">
-    <rd-widget>
-      <rd-widget-header icon="fa-server" title-text="Container health"></rd-widget-header>
-      <rd-widget-body classes="no-padding">
-        <table class="table">
-          <tbody>
-            <tr>
-              <td>Status</td>
-              <td>
-                <i
-                  ng-class="
-                    { healthy: 'fa fa-heartbeat space-right green-icon', unhealthy: 'fa fa-heartbeat space-right red-icon', starting: 'fa fa-heartbeat space-right orange-icon' }[
-                      container.State.Health.Status
-                    ]
-                  "
-                ></i>
-                {{ container.State.Health.Status }}
-              </td>
-            </tr>
-            <tr>
-              <td>Failure count</td>
-              <td>{{ container.State.Health.FailingStreak }}</td>
-            </tr>
-            <tr>
-              <td>Last output</td>
-              <td>{{ container.State.Health.Log[container.State.Health.Log.length - 1].Output }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </rd-widget-body>
-    </rd-widget>
-  </div>
-</div>
+<docker-health-status ng-if="container.State.Health" health="container.State.Health"></docker-health-status>
 
 <div class="row" authorization="DockerImageCreate">
   <div class="col-lg-12 col-md-12 col-xs-12">
     <rd-widget>
-      <rd-widget-header icon="fa-clone" title-text="Create image"></rd-widget-header>
+      <rd-widget-header icon="list" title-text="Create image"></rd-widget-header>
       <rd-widget-body>
         <form class="form-horizontal">
           <!-- tag-description -->
@@ -190,7 +195,16 @@
           </div>
           <!-- !tag-description -->
           <!-- image-and-registry -->
-          <por-image-registry model="config.RegistryModel" auto-complete="true" label-class="col-sm-1" input-class="col-sm-11"></por-image-registry>
+          <por-image-registry
+            model="config.RegistryModel"
+            auto-complete="true"
+            label-class="col-sm-1"
+            input-class="col-sm-11"
+            endpoint="endpoint"
+            is-admin="isAdmin"
+            set-validity="setPullImageValidity"
+            check-rate-limits="true"
+          ></por-image-registry>
           <!-- !image-and-registry -->
           <!-- tag-note -->
           <div class="form-group">
@@ -201,7 +215,14 @@
           <!-- !tag-note -->
           <div class="form-group">
             <div class="col-sm-12">
-              <button type="button" class="btn btn-primary btn-sm" ng-disabled="!config.RegistryModel.Image || config.commitInProgress" ng-click="commit()">Create</button>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                ng-disabled="!state.pullImageValidity || !config.RegistryModel.Image || config.commitInProgress"
+                ng-click="commit()"
+              >
+                Create
+              </button>
             </div>
           </div>
         </form>
@@ -212,7 +233,7 @@
 <div class="row">
   <div class="col-lg-12 col-md-12 col-xs-12">
     <rd-widget>
-      <rd-widget-header icon="fa-server" title-text="Container details"></rd-widget-header>
+      <rd-widget-header icon="list" title-text="Container details"></rd-widget-header>
       <rd-widget-body classes="no-padding">
         <table class="table container-details-table">
           <tbody>
@@ -225,7 +246,11 @@
             <tr ng-if="portBindings.length > 0">
               <td>Port configuration</td>
               <td>
-                <div ng-repeat="portMapping in portBindings"> {{ portMapping.host }} <i class="fa fa-long-arrow-alt-right"></i> {{ portMapping.container }} </div>
+                <div ng-repeat="portMapping in portBindings">
+                  {{ portMapping.host }}
+                  <pr-icon icon="'arrow-right'"></pr-icon>
+                  {{ portMapping.container }}
+                </div>
               </td>
             </tr>
             <tr>
@@ -274,6 +299,21 @@
                 </container-restart-policy>
               </td>
             </tr>
+            <tr ng-if="!(container.HostConfig.Sysctls | emptyobject)">
+              <td>Sysctls</td>
+              <td>
+                <table class="table table-bordered table-condensed">
+                  <tr ng-repeat="(k, v) in container.HostConfig.Sysctls">
+                    <td>{{ k }}</td>
+                    <td>{{ v }}</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr ng-if="container.HostConfig.DeviceRequests.length">
+              <td>GPUS</td>
+              <td>{{ computeDockerGPUCommand() }}</td>
+            </tr>
           </tbody>
         </table>
       </rd-widget-body>
@@ -284,7 +324,7 @@
 <div class="row" ng-if="container.Mounts.length > 0">
   <div class="col-lg-12 col-md-12 col-xs-12">
     <rd-widget>
-      <rd-widget-header icon="fa-hdd" title-text="Volumes"></rd-widget-header>
+      <rd-widget-header icon="database" title-text="Volumes"></rd-widget-header>
       <rd-widget-body classes="no-padding">
         <table class="table">
           <thead>
@@ -313,7 +353,7 @@
     <container-networks-datatable
       ng-if="container.NetworkSettings.Networks"
       title-text="Connected networks"
-      title-icon="fa-sitemap"
+      title-icon="share-2"
       dataset="container.NetworkSettings.Networks"
       table-key="container-networks"
       container="container"

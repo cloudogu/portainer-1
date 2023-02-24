@@ -1,8 +1,14 @@
 import _ from 'lodash-es';
+
 import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
+
+import * as envVarsUtils from '@/portainer/helpers/env-vars';
+import { FeatureId } from '@/react/portainer/feature-flags/enums';
 import { ContainerCapabilities, ContainerCapability } from '../../../models/containerCapabilities';
 import { AccessControlFormData } from '../../../../portainer/components/accessControlForm/porAccessControlFormModel';
 import { ContainerDetailsViewModel } from '../../../models/container';
+
+import './createcontainer.css';
 
 angular.module('portainer.docker').controller('CreateContainerController', [
   '$q',
@@ -27,9 +33,9 @@ angular.module('portainer.docker').controller('CreateContainerController', [
   'ModalService',
   'RegistryService',
   'SystemService',
-  'SettingsService',
   'PluginService',
   'HttpRequestHelper',
+  'endpoint',
   function (
     $q,
     $scope,
@@ -53,14 +59,22 @@ angular.module('portainer.docker').controller('CreateContainerController', [
     ModalService,
     RegistryService,
     SystemService,
-    SettingsService,
     PluginService,
-    HttpRequestHelper
+    HttpRequestHelper,
+    endpoint
   ) {
     $scope.create = create;
-
+    $scope.update = update;
+    $scope.endpoint = endpoint;
+    $scope.containerWebhookFeature = FeatureId.CONTAINER_WEBHOOK;
     $scope.formValues = {
       alwaysPull: true,
+      GPU: {
+        enabled: false,
+        useSpecific: false,
+        selectedGPUs: ['all'],
+        capabilities: ['compute', 'utility'],
+      },
       Console: 'none',
       Volumes: [],
       NetworkContainer: null,
@@ -75,10 +89,13 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       CpuLimit: 0,
       MemoryLimit: 0,
       MemoryReservation: 0,
+      ShmSize: 64,
       CmdMode: 'default',
       EntrypointMode: 'default',
+      Env: [],
       NodeName: null,
       capabilities: [],
+      Sysctls: [],
       LogDriverName: '',
       LogDriverOpts: [],
       RegistryModel: new PorImageRegistryModel(),
@@ -90,7 +107,50 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       formValidationError: '',
       actionInProgress: false,
       mode: '',
+      pullImageValidity: true,
+      settingUnlimitedResources: false,
     };
+
+    $scope.onAlwaysPullChange = onAlwaysPullChange;
+    $scope.handlePublishAllPortsChange = handlePublishAllPortsChange;
+    $scope.handleAutoRemoveChange = handleAutoRemoveChange;
+    $scope.handlePrivilegedChange = handlePrivilegedChange;
+    $scope.handleInitChange = handleInitChange;
+
+    function onAlwaysPullChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.formValues.alwaysPull = checked;
+      });
+    }
+
+    function handlePublishAllPortsChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.config.HostConfig.PublishAllPorts = checked;
+      });
+    }
+
+    function handleAutoRemoveChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.config.HostConfig.AutoRemove = checked;
+      });
+    }
+
+    function handlePrivilegedChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.config.HostConfig.Privileged = checked;
+      });
+    }
+
+    function handleInitChange(checked) {
+      return $scope.$evalAsync(() => {
+        $scope.config.HostConfig.Init = checked;
+      });
+    }
+
+    $scope.handleEnvVarChange = handleEnvVarChange;
+    function handleEnvVarChange(value) {
+      $scope.formValues.Env = value;
+    }
 
     $scope.refreshSlider = function () {
       $timeout(function () {
@@ -102,6 +162,14 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       $scope.formValues.CmdMode = 'default';
       $scope.formValues.EntrypointMode = 'default';
     };
+
+    $scope.setPullImageValidity = setPullImageValidity;
+    function setPullImageValidity(validity) {
+      if (!validity) {
+        $scope.formValues.alwaysPull = false;
+      }
+      $scope.state.pullImageValidity = validity;
+    }
 
     $scope.config = {
       Image: '',
@@ -124,8 +192,10 @@ angular.module('portainer.docker').controller('CreateContainerController', [
         Runtime: null,
         ExtraHosts: [],
         Devices: [],
+        DeviceRequests: [],
         CapAdd: [],
         CapDrop: [],
+        Sysctls: {},
       },
       NetworkingConfig: {
         EndpointsConfig: {},
@@ -139,14 +209,6 @@ angular.module('portainer.docker').controller('CreateContainerController', [
 
     $scope.removeVolume = function (index) {
       $scope.formValues.Volumes.splice(index, 1);
-    };
-
-    $scope.addEnvironmentVariable = function () {
-      $scope.config.Env.push({ name: '', value: '' });
-    };
-
-    $scope.removeEnvironmentVariable = function (index) {
-      $scope.config.Env.splice(index, 1);
     };
 
     $scope.addPortBinding = function () {
@@ -179,6 +241,20 @@ angular.module('portainer.docker').controller('CreateContainerController', [
 
     $scope.removeDevice = function (index) {
       $scope.config.HostConfig.Devices.splice(index, 1);
+    };
+
+    $scope.onGpuChange = function (values) {
+      return $async(async () => {
+        $scope.formValues.GPU = values;
+      });
+    };
+
+    $scope.addSysctl = function () {
+      $scope.formValues.Sysctls.push({ name: '', value: '' });
+    };
+
+    $scope.removeSysctl = function (index) {
+      $scope.formValues.Sysctls.splice(index, 1);
     };
 
     $scope.addLogDriverOpt = function () {
@@ -234,13 +310,7 @@ angular.module('portainer.docker').controller('CreateContainerController', [
     }
 
     function prepareEnvironmentVariables(config) {
-      var env = [];
-      config.Env.forEach(function (v) {
-        if (v.name && v.value) {
-          env.push(v.name + '=' + v.value);
-        }
-      });
-      config.Env = env;
+      config.Env = envVarsUtils.convertToArrayOfStrings($scope.formValues.Env);
     }
 
     function prepareVolumes(config) {
@@ -334,7 +404,24 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       config.HostConfig.Devices = path;
     }
 
+    function prepareSysctls(config) {
+      var sysctls = {};
+      $scope.formValues.Sysctls.forEach(function (sysctl) {
+        if (sysctl.name && sysctl.value) {
+          sysctls[sysctl.name] = sysctl.value;
+        }
+      });
+      config.HostConfig.Sysctls = sysctls;
+    }
+
     function prepareResources(config) {
+      // Shared Memory Size - Round to 0.125
+      if ($scope.formValues.ShmSize >= 0) {
+        var shmSize = (Math.round($scope.formValues.ShmSize * 8) / 8).toFixed(3);
+        shmSize *= 1024 * 1024;
+        config.HostConfig.ShmSize = shmSize;
+      }
+
       // Memory Limit - Round to 0.125
       if ($scope.formValues.MemoryLimit >= 0) {
         var memoryLimit = (Math.round($scope.formValues.MemoryLimit * 8) / 8).toFixed(3);
@@ -387,6 +474,32 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       config.HostConfig.CapDrop = notAllowed.map(getCapName);
     }
 
+    function prepareGPUOptions(config) {
+      const driver = 'nvidia';
+      const gpuOptions = $scope.formValues.GPU;
+      const existingDeviceRequest = _.find($scope.config.HostConfig.DeviceRequests, { Driver: driver });
+      if (existingDeviceRequest) {
+        _.pullAllBy(config.HostConfig.DeviceRequests, [existingDeviceRequest], 'Driver');
+      }
+      if (!gpuOptions.enabled) {
+        return;
+      }
+      const deviceRequest = {
+        Driver: driver,
+        Count: -1,
+        DeviceIDs: [], // must be empty if Count != 0 https://github.com/moby/moby/blob/master/daemon/nvidia_linux.go#L50
+        Capabilities: [], // array of ORed arrays of ANDed capabilites = [ [c1 AND c2] OR [c1 AND c3] ] : https://github.com/moby/moby/blob/master/api/types/container/host_config.go#L272
+        // Options: { property1: "string", property2: "string" }, // seems to never be evaluated/used in docker API ?
+      };
+      if (gpuOptions.useSpecific) {
+        deviceRequest.DeviceIDs = gpuOptions.selectedGPUs;
+        deviceRequest.Count = 0;
+      }
+      deviceRequest.Capabilities = [gpuOptions.capabilities];
+
+      config.HostConfig.DeviceRequests.push(deviceRequest);
+    }
+
     function prepareConfiguration() {
       var config = angular.copy($scope.config);
       prepareCmd(config);
@@ -402,6 +515,8 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       prepareResources(config);
       prepareLogDriver(config);
       prepareCapabilities(config);
+      prepareSysctls(config);
+      prepareGPUOptions(config);
       return config;
     }
 
@@ -506,14 +621,7 @@ angular.module('portainer.docker').controller('CreateContainerController', [
     }
 
     function loadFromContainerEnvironmentVariables() {
-      var envArr = [];
-      for (var e in $scope.config.Env) {
-        if ({}.hasOwnProperty.call($scope.config.Env, e)) {
-          var arr = $scope.config.Env[e].split(/\=(.*)/);
-          envArr.push({ name: arr[0], value: arr[1] });
-        }
-      }
-      $scope.config.Env = envArr;
+      $scope.formValues.Env = envVarsUtils.parseArrayOfStrings($scope.config.Env);
     }
 
     function loadFromContainerLabels() {
@@ -547,13 +655,41 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       $scope.config.HostConfig.Devices = path;
     }
 
+    function loadFromContainerDeviceRequests() {
+      const deviceRequest = _.find($scope.config.HostConfig.DeviceRequests, function (o) {
+        return o.Driver === 'nvidia' || o.Capabilities[0][0] === 'gpu';
+      });
+      if (deviceRequest) {
+        $scope.formValues.GPU.enabled = true;
+        $scope.formValues.GPU.useSpecific = deviceRequest.Count !== -1;
+        $scope.formValues.GPU.selectedGPUs = deviceRequest.DeviceIDs || [];
+        if ($scope.formValues.GPU.useSpecific) {
+          $scope.formValues.GPU.selectedGPUs = deviceRequest.DeviceIDs;
+        } else {
+          $scope.formValues.GPU.selectedGPUs = ['all'];
+        }
+        // we only support a single set of capabilities for now
+        // UI needs to be reworked in order to support OR combinations of AND capabilities
+        $scope.formValues.GPU.capabilities = deviceRequest.Capabilities[0];
+        $scope.formValues.GPU = { ...$scope.formValues.GPU };
+      }
+    }
+
+    function loadFromContainerSysctls() {
+      for (var s in $scope.config.HostConfig.Sysctls) {
+        if ({}.hasOwnProperty.call($scope.config.HostConfig.Sysctls, s)) {
+          $scope.formValues.Sysctls.push({ name: s, value: $scope.config.HostConfig.Sysctls[s] });
+        }
+      }
+    }
+
     function loadFromContainerImageConfig() {
-      RegistryService.retrievePorRegistryModelFromRepository($scope.config.Image)
+      RegistryService.retrievePorRegistryModelFromRepository($scope.config.Image, endpoint.Id)
         .then((model) => {
           $scope.formValues.RegistryModel = model;
         })
         .catch(function error(err) {
-          Notifications.error('Failure', err, 'Unable to retrive registry');
+          Notifications.error('Failure', err, 'Unable to retrieve registry');
         });
     }
 
@@ -566,6 +702,9 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       }
       if (d.HostConfig.MemoryReservation) {
         $scope.formValues.MemoryReservation = d.HostConfig.MemoryReservation / 1024 / 1024;
+      }
+      if (d.HostConfig.ShmSize) {
+        $scope.formValues.ShmSize = d.HostConfig.ShmSize / 1024 / 1024;
       }
     }
 
@@ -603,9 +742,17 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       Container.get({ id: $transition$.params().from })
         .$promise.then(function success(d) {
           var fromContainer = new ContainerDetailsViewModel(d);
-          if (fromContainer.ResourceControl && fromContainer.ResourceControl.Public) {
-            $scope.formValues.AccessControlData.AccessControlEnabled = false;
+          if (fromContainer.ResourceControl) {
+            if (fromContainer.ResourceControl.Public) {
+              $scope.formValues.AccessControlData.AccessControlEnabled = false;
+            }
+
+            // When the container is create by duplicate/edit, the access permission
+            // shouldn't be copied
+            fromContainer.ResourceControl.UserAccesses = [];
+            fromContainer.ResourceControl.TeamAccesses = [];
           }
+
           $scope.fromContainer = fromContainer;
           $scope.state.mode = 'duplicate';
           $scope.config = ContainerHelper.configFromContainer(fromContainer.Model);
@@ -619,9 +766,11 @@ angular.module('portainer.docker').controller('CreateContainerController', [
           loadFromContainerLabels(d);
           loadFromContainerConsole(d);
           loadFromContainerDevices(d);
+          loadFromContainerDeviceRequests(d);
           loadFromContainerImageConfig(d);
           loadFromContainerResources(d);
           loadFromContainerCapabilities(d);
+          loadFromContainerSysctls(d);
         })
         .catch(function error(err) {
           Notifications.error('Failure', err, 'Unable to retrieve container');
@@ -646,6 +795,7 @@ angular.module('portainer.docker').controller('CreateContainerController', [
 
       $scope.isAdmin = Authentication.isAdmin();
       $scope.showDeviceMapping = await shouldShowDevices();
+      $scope.showSysctls = await shouldShowSysctls();
       $scope.areContainerCapabilitiesEnabled = await checkIfContainerCapabilitiesEnabled();
       $scope.isAdminOrEndpointAdmin = Authentication.isAdmin();
 
@@ -681,6 +831,8 @@ angular.module('portainer.docker').controller('CreateContainerController', [
         function (d) {
           var containers = d;
           $scope.runningContainers = containers;
+          $scope.gpuUseAll = _.get($scope, 'endpoint.Snapshots[0].GpuUseAll', false);
+          $scope.gpuUseList = _.get($scope, 'endpoint.Snapshots[0].GpuUseList', []);
           if ($transition$.params().from) {
             loadFromContainerSpec();
           } else {
@@ -709,14 +861,8 @@ angular.module('portainer.docker').controller('CreateContainerController', [
           Notifications.error('Failure', err, 'Unable to retrieve engine details');
         });
 
-      SettingsService.publicSettings()
-        .then(function success(data) {
-          $scope.allowBindMounts = $scope.isAdminOrEndpointAdmin || data.AllowBindMountsForRegularUsers;
-          $scope.allowPrivilegedMode = data.AllowPrivilegedModeForRegularUsers;
-        })
-        .catch(function error(err) {
-          Notifications.error('Failure', err, 'Unable to retrieve application settings');
-        });
+      $scope.allowBindMounts = $scope.isAdminOrEndpointAdmin || endpoint.SecuritySettings.allowBindMountsForRegularUsers;
+      $scope.allowPrivilegedMode = endpoint.SecuritySettings.allowPrivilegedModeForRegularUsers;
 
       PluginService.loggingPlugins(apiVersion < 1.25).then(function success(loggingDrivers) {
         $scope.availableLoggingDrivers = loggingDrivers;
@@ -733,6 +879,40 @@ angular.module('portainer.docker').controller('CreateContainerController', [
         return false;
       }
       return true;
+    }
+
+    $scope.handleResourceChange = handleResourceChange;
+    function handleResourceChange() {
+      $scope.state.settingUnlimitedResources = false;
+      if (
+        ($scope.config.HostConfig.Memory > 0 && $scope.formValues.MemoryLimit === 0) ||
+        ($scope.config.HostConfig.MemoryReservation > 0 && $scope.formValues.MemoryReservation === 0) ||
+        ($scope.config.HostConfig.NanoCpus > 0 && $scope.formValues.CpuLimit === 0)
+      ) {
+        $scope.state.settingUnlimitedResources = true;
+      }
+    }
+
+    async function updateLimits(config) {
+      try {
+        if ($scope.state.settingUnlimitedResources) {
+          create();
+        } else {
+          await ContainerService.updateLimits($transition$.params().from, config);
+          $scope.config = config;
+          Notifications.success('Success', 'Limits updated');
+        }
+      } catch (err) {
+        Notifications.error('Failure', err, 'Update Limits fail');
+      }
+    }
+
+    async function update() {
+      $scope.state.actionInProgress = true;
+      var config = angular.copy($scope.config);
+      prepareResources(config);
+      await updateLimits(config);
+      $scope.state.actionInProgress = false;
     }
 
     function create() {
@@ -820,7 +1000,7 @@ angular.module('portainer.docker').controller('CreateContainerController', [
         function showConfirmationModal() {
           var deferred = $q.defer();
 
-          ModalService.confirm({
+          ModalService.confirmDestructive({
             title: 'Are you sure ?',
             message: 'A container with the same name already exists. Portainer can automatically remove it and re-create one. Do you want to replace it?',
             buttons: {
@@ -927,21 +1107,21 @@ angular.module('portainer.docker').controller('CreateContainerController', [
       }
 
       function onSuccess() {
-        Notifications.success('Container successfully created');
+        Notifications.success('Success', 'Container successfully created');
         $state.go('docker.containers', {}, { reload: true });
       }
     }
 
     async function shouldShowDevices() {
-      const { allowDeviceMappingForRegularUsers } = $scope.applicationState.application;
+      return endpoint.SecuritySettings.allowDeviceMappingForRegularUsers || Authentication.isAdmin();
+    }
 
-      return allowDeviceMappingForRegularUsers || Authentication.isAdmin();
+    async function shouldShowSysctls() {
+      return endpoint.SecuritySettings.allowSysctlSettingForRegularUsers || Authentication.isAdmin();
     }
 
     async function checkIfContainerCapabilitiesEnabled() {
-      const { allowContainerCapabilitiesForRegularUsers } = $scope.applicationState.application;
-
-      return allowContainerCapabilitiesForRegularUsers || Authentication.isAdmin();
+      return endpoint.SecuritySettings.allowContainerCapabilitiesForRegularUsers || Authentication.isAdmin();
     }
 
     initView();

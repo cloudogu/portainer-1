@@ -1,52 +1,10 @@
 import _ from 'lodash-es';
 import { KubernetesApplicationDataAccessPolicies } from 'Kubernetes/models/application/models';
-import { KubernetesServiceTypes } from 'Kubernetes/models/service/models';
 import { KubernetesApplicationTypes, KubernetesApplicationTypeStrings } from 'Kubernetes/models/application/models';
 import { KubernetesPodNodeAffinityNodeSelectorRequirementOperators } from 'Kubernetes/pod/models';
 
 angular
   .module('portainer.kubernetes')
-  .filter('kubernetesApplicationServiceTypeIcon', function () {
-    'use strict';
-    return function (text) {
-      var status = _.toLower(text);
-      switch (status) {
-        case 'loadbalancer':
-          return 'fa-project-diagram';
-        case 'clusterip':
-          return 'fa-list-alt';
-        case 'nodeport':
-          return 'fa-list';
-      }
-    };
-  })
-  .filter('kubernetesApplicationServiceTypeText', function () {
-    'use strict';
-    return function (text) {
-      var status = _.toLower(text);
-      switch (status) {
-        case 'loadbalancer':
-          return 'Load balancer';
-        case 'clusterip':
-          return 'Internal';
-        case 'nodeport':
-          return 'Cluster';
-      }
-    };
-  })
-  .filter('kubernetesApplicationPortsTableHeaderText', function () {
-    'use strict';
-    return function (serviceType) {
-      switch (serviceType) {
-        case KubernetesServiceTypes.LOAD_BALANCER:
-          return 'Load balancer';
-        case KubernetesServiceTypes.CLUSTER_IP:
-          return 'Application';
-        case KubernetesServiceTypes.NODE_PORT:
-          return 'Cluster node';
-      }
-    };
-  })
   .filter('kubernetesApplicationTypeText', function () {
     'use strict';
     return function (type) {
@@ -59,6 +17,8 @@ angular
           return KubernetesApplicationTypeStrings.STATEFULSET;
         case KubernetesApplicationTypes.POD:
           return KubernetesApplicationTypeStrings.POD;
+        case KubernetesApplicationTypes.HELM:
+          return KubernetesApplicationTypeStrings.HELM;
         default:
           return '-';
       }
@@ -75,9 +35,9 @@ angular
     return function (value) {
       switch (value) {
         case KubernetesApplicationDataAccessPolicies.ISOLATED:
-          return 'fa-cubes';
+          return 'boxes';
         case KubernetesApplicationDataAccessPolicies.SHARED:
-          return 'fa-cube';
+          return 'box';
       }
     };
   })
@@ -131,5 +91,15 @@ angular
         'kubernetes.io/hostname': 'Node',
       };
       return values[text] || text;
+    };
+  })
+  .filter('kubernetesApplicationIngressEmptyHostname', function () {
+    'use strict';
+    return function (value) {
+      if (value === '') {
+        return '<use IP>';
+      } else {
+        return value;
+      }
     };
   });

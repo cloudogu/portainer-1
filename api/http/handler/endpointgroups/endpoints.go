@@ -1,8 +1,8 @@
 package endpointgroups
 
 import (
-	portainer "github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	portainer "github.com/portainer/portainer/api"
+	"github.com/portainer/portainer/api/internal/edge"
 )
 
 func (handler *Handler) updateEndpointRelations(endpoint *portainer.Endpoint, endpointGroup *portainer.EndpointGroup) error {
@@ -17,11 +17,6 @@ func (handler *Handler) updateEndpointRelations(endpoint *portainer.Endpoint, en
 		}
 
 		endpointGroup = unassignedGroup
-	}
-
-	endpointRelation, err := handler.DataStore.EndpointRelation().EndpointRelation(endpoint.ID)
-	if err != nil {
-		return err
 	}
 
 	edgeGroups, err := handler.DataStore.EdgeGroup().EdgeGroups()
@@ -39,7 +34,8 @@ func (handler *Handler) updateEndpointRelations(endpoint *portainer.Endpoint, en
 	for _, edgeStackID := range endpointStacks {
 		stacksSet[edgeStackID] = true
 	}
-	endpointRelation.EdgeStacks = stacksSet
 
-	return handler.DataStore.EndpointRelation().UpdateEndpointRelation(endpoint.ID, endpointRelation)
+	return handler.DataStore.EndpointRelation().UpdateEndpointRelationFunc(endpoint.ID, func(relation *portainer.EndpointRelation) {
+		relation.EdgeStacks = stacksSet
+	})
 }

@@ -1,9 +1,10 @@
 import angular from 'angular';
 import _ from 'lodash-es';
+import filesizeParser from 'filesize-parser';
 import KubernetesVolumeHelper from 'Kubernetes/helpers/volumeHelper';
 import KubernetesEventHelper from 'Kubernetes/helpers/eventHelper';
 import { KubernetesStorageClassAccessPolicies } from 'Kubernetes/models/storage-class/models';
-import filesizeParser from 'filesize-parser';
+import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
 
 class KubernetesVolumeController {
   /* @ngInject */
@@ -14,7 +15,6 @@ class KubernetesVolumeController {
     LocalStorage,
     KubernetesVolumeService,
     KubernetesEventService,
-    KubernetesNamespaceHelper,
     KubernetesApplicationService,
     KubernetesPersistentVolumeClaimService,
     ModalService,
@@ -27,7 +27,6 @@ class KubernetesVolumeController {
 
     this.KubernetesVolumeService = KubernetesVolumeService;
     this.KubernetesEventService = KubernetesEventService;
-    this.KubernetesNamespaceHelper = KubernetesNamespaceHelper;
     this.KubernetesApplicationService = KubernetesApplicationService;
     this.KubernetesPersistentVolumeClaimService = KubernetesPersistentVolumeClaimService;
     this.ModalService = ModalService;
@@ -55,7 +54,7 @@ class KubernetesVolumeController {
   }
 
   isSystemNamespace() {
-    return this.KubernetesNamespaceHelper.isSystemNamespace(this.volume.ResourcePool.Namespace.Name);
+    return KubernetesNamespaceHelper.isSystemNamespace(this.volume.ResourcePool.Namespace.Name);
   }
 
   isUsed() {
@@ -64,18 +63,17 @@ class KubernetesVolumeController {
 
   onChangeSize() {
     if (this.state.volumeSize) {
-      const size = filesizeParser(this.state.volumeSize + this.state.volumeSizeUnit);
+      const size = filesizeParser(this.state.volumeSize + this.state.volumeSizeUnit, { base: 10 });
       if (this.state.oldVolumeSize > size) {
-        this.state.volumeSizeError = true;
+        this.state.errors.volumeSize = true;
       } else {
-        this.volume.PersistentVolumeClaim.Storage = size;
-        this.state.volumeSizeError = false;
+        this.state.errors.volumeSize = false;
       }
     }
   }
 
   sizeIsValid() {
-    return !this.state.volumeSizeError && this.state.oldVolumeSize !== this.volume.PersistentVolumeClaim.Storage;
+    return !this.state.errors.volumeSize && this.state.volumeSize && this.state.oldVolumeSize !== filesizeParser(this.state.volumeSize + this.state.volumeSizeUnit, { base: 10 });
   }
 
   /**
@@ -84,9 +82,9 @@ class KubernetesVolumeController {
 
   async updateVolumeAsync(redeploy) {
     try {
-      this.volume.PersistentVolumeClaim.Storage = this.state.volumeSize + this.state.volumeSizeUnit.charAt(0) + 'i';
+      this.volume.PersistentVolumeClaim.Storage = this.state.volumeSize + this.state.volumeSizeUnit.charAt(0);
       await this.KubernetesPersistentVolumeClaimService.patch(this.oldVolume.PersistentVolumeClaim, this.volume.PersistentVolumeClaim);
-      this.Notifications.success('Volume successfully updated');
+      this.Notifications.success('Success', 'Volume successfully updated');
 
       if (redeploy) {
         const promises = _.flatten(
@@ -95,10 +93,10 @@ class KubernetesVolumeController {
           })
         );
         await Promise.all(promises);
-        this.Notifications.success('Applications successfully redeployed');
+        this.Notifications.success('Success', 'Applications successfully redeployed');
       }
 
-      this.$state.reload();
+      this.$state.reload(this.$state.current);
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to update volume.');
     }
@@ -118,17 +116,18 @@ class KubernetesVolumeController {
   }
 
   async getVolumeAsync() {
+    const storageClasses = this.endpoint.Kubernetes.Configuration.StorageClasses;
     try {
       const [volume, applications] = await Promise.all([
-        this.KubernetesVolumeService.get(this.state.namespace, this.state.name),
+        this.KubernetesVolumeService.get(this.state.namespace, storageClasses, this.state.name),
         this.KubernetesApplicationService.get(this.state.namespace),
       ]);
       volume.Applications = KubernetesVolumeHelper.getUsingApplications(volume, applications);
       this.volume = volume;
       this.oldVolume = angular.copy(volume);
-      this.state.volumeSize = parseInt(volume.PersistentVolumeClaim.Storage.slice(0, -2));
+      this.state.volumeSize = parseInt(volume.PersistentVolumeClaim.Storage.slice(0, -2), 10);
       this.state.volumeSizeUnit = volume.PersistentVolumeClaim.Storage.slice(-2);
-      this.state.oldVolumeSize = filesizeParser(volume.PersistentVolumeClaim.Storage);
+      this.state.oldVolumeSize = filesizeParser(volume.PersistentVolumeClaim.Storage, { base: 10 });
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve volume');
     }
@@ -179,9 +178,11 @@ class KubernetesVolumeController {
       increaseSize: false,
       volumeSize: 0,
       volumeSizeUnit: 'GB',
-      volumeSizeError: false,
       volumeSharedAccessPolicy: '',
       volumeSharedAccessPolicyTooltip: '',
+      errors: {
+        volumeSize: false,
+      },
     };
 
     this.state.activeTab = this.LocalStorage.getActiveTab('volume');

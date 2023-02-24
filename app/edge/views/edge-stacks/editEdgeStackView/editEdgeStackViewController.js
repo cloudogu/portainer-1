@@ -1,13 +1,15 @@
 import _ from 'lodash-es';
+import { getEnvironments } from '@/react/portainer/environments/environment.service';
 
 export class EditEdgeStackViewController {
   /* @ngInject */
-  constructor($async, $state, EdgeGroupService, EdgeStackService, EndpointService, Notifications) {
+  constructor($async, $state, $window, ModalService, EdgeGroupService, EdgeStackService, Notifications) {
     this.$async = $async;
     this.$state = $state;
+    this.$window = $window;
+    this.ModalService = ModalService;
     this.EdgeGroupService = EdgeGroupService;
     this.EdgeStackService = EdgeStackService;
-    this.EndpointService = EndpointService;
     this.Notifications = Notifications;
 
     this.stack = null;
@@ -16,6 +18,7 @@ export class EditEdgeStackViewController {
     this.state = {
       actionInProgress: false,
       activeTab: 0,
+      isEditorDirty: false,
     };
 
     this.deployStack = this.deployStack.bind(this);
@@ -36,10 +39,32 @@ export class EditEdgeStackViewController {
       this.formValues = {
         StackFileContent: file,
         EdgeGroups: this.stack.EdgeGroups,
-        Prune: this.stack.Prune,
+        UseManifestNamespaces: this.stack.UseManifestNamespaces,
+        DeploymentType: this.stack.DeploymentType,
       };
+      this.oldFileContent = this.formValues.StackFileContent;
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve stack data');
+    }
+
+    this.$window.onbeforeunload = () => {
+      if (this.formValues.StackFileContent !== this.oldFileContent && this.state.isEditorDirty) {
+        return '';
+      }
+    };
+  }
+
+  $onDestroy() {
+    this.state.isEditorDirty = false;
+  }
+
+  async uiCanExit() {
+    if (
+      this.formValues.StackFileContent &&
+      this.formValues.StackFileContent.replace(/(\r\n|\n|\r)/gm, '') !== this.oldFileContent.replace(/(\r\n|\n|\r)/gm, '') &&
+      this.state.isEditorDirty
+    ) {
+      return this.ModalService.confirmWebEditorDiscard();
     }
   }
 
@@ -59,11 +84,12 @@ export class EditEdgeStackViewController {
   async deployStackAsync() {
     this.state.actionInProgress = true;
     try {
-      if (this.originalFileContent != this.formValues.StackFileContent) {
+      if (this.originalFileContent != this.formValues.StackFileContent || this.formValues.UseManifestNamespaces !== this.stack.UseManifestNamespaces) {
         this.formValues.Version = this.stack.Version + 1;
       }
       await this.EdgeStackService.updateStack(this.stack.Id, this.formValues);
-      this.Notifications.success('Stack successfully deployed');
+      this.Notifications.success('Success', 'Stack successfully deployed');
+      this.state.isEditorDirty = false;
       this.$state.go('edge.stacks');
     } catch (err) {
       this.Notifications.error('Deployment error', err, 'Unable to deploy stack');
@@ -78,16 +104,16 @@ export class EditEdgeStackViewController {
 
   async getPaginatedEndpointsAsync(lastId, limit, search) {
     try {
-      const query = { search, type: 4, endpointIds: this.stackEndpointIds };
-      const { value, totalCount } = await this.EndpointService.endpoints(lastId, limit, query);
-      const endpoints = _.map(value, (endpoint) => {
-        const status = this.stack.Status[endpoint.Id];
-        endpoint.Status = status;
-        return endpoint;
-      });
-      return { endpoints, totalCount };
+      if (this.stackEndpointIds.length === 0) {
+        return { endpoints: [], totalCount: 0 };
+      }
+
+      const query = { search, endpointIds: this.stackEndpointIds };
+      const { value, totalCount } = await getEnvironments({ start: lastId, limit, query });
+
+      return { endpoints: value, totalCount };
     } catch (err) {
-      this.Notifications.error('Failure', err, 'Unable to retrieve endpoint information');
+      this.Notifications.error('Failure', err, 'Unable to retrieve environment information');
     }
   }
 }

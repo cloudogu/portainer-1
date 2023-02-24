@@ -20,12 +20,6 @@ export class EdgeStackEndpointsDatatableController {
     this.onPageChange = this.onPageChange.bind(this);
     this.paginationChanged = this.paginationChanged.bind(this);
     this.paginationChangedAsync = this.paginationChangedAsync.bind(this);
-
-    this.statusMap = {
-      1: 'OK',
-      2: 'Error',
-      3: 'Acknowledged',
-    };
   }
 
   extendGenericController($controller, $scope) {
@@ -37,6 +31,23 @@ export class EdgeStackEndpointsDatatableController {
     this.$onInit = $onInit;
     this.changePaginationLimit = changePaginationLimit;
     this.onTextFilterChange = onTextFilterChange;
+  }
+
+  getEndpointStatus(endpointId) {
+    return this.endpointsStatus[endpointId];
+  }
+
+  endpointStatusLabel(endpointId) {
+    const status = this.getEndpointStatus(endpointId);
+    const details = (status && status.Details) || {};
+
+    return (details.Error && 'Error') || (details.Ok && 'Ok') || (details.ImagesPulled && 'Images pre-pulled') || (details.Acknowledged && 'Acknowledged') || 'Pending';
+  }
+
+  endpointStatusError(endpointId) {
+    const status = this.getEndpointStatus(endpointId);
+
+    return status && status.Error ? status.Error : '-';
   }
 
   $onInit() {
@@ -101,7 +112,7 @@ export class EdgeStackEndpointsDatatableController {
       this.state.filteredDataSet = endpoints;
       this.state.totalFilteredDataSet = totalCount;
     } catch (err) {
-      this.Notifications.error('Failure', err, 'Unable to retrieve endpoints');
+      this.Notifications.error('Failure', err, 'Unable to retrieve environments');
     } finally {
       this.state.loading = false;
     }

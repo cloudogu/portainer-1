@@ -5,7 +5,7 @@ License:        Zlib
 Summary:        A lightweight docker management UI
 Url:            https://portainer.io
 Group:          BLAH
-Source0:        https://github.com/cloudogu/portainer-ce/releases/download/%{version}/portainer-%{version}-linux-amd64.tar.gz
+Source0:        https://github.com/portainer/portainer/releases/download/%{version}/portainer-%{version}-linux-amd64.tar.gz
 Source1:        portainer.service
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 %if 0%{?suse_version}

@@ -2,39 +2,46 @@ export function SettingsViewModel(data) {
   this.LogoURL = data.LogoURL;
   this.BlackListedLabels = data.BlackListedLabels;
   this.AuthenticationMethod = data.AuthenticationMethod;
+  this.InternalAuthSettings = data.InternalAuthSettings;
   this.LDAPSettings = data.LDAPSettings;
   this.OAuthSettings = new OAuthSettingsViewModel(data.OAuthSettings);
-  this.AllowBindMountsForRegularUsers = data.AllowBindMountsForRegularUsers;
-  this.AllowPrivilegedModeForRegularUsers = data.AllowPrivilegedModeForRegularUsers;
-  this.AllowVolumeBrowserForRegularUsers = data.AllowVolumeBrowserForRegularUsers;
-  this.AllowHostNamespaceForRegularUsers = data.AllowHostNamespaceForRegularUsers;
-  this.AllowDeviceMappingForRegularUsers = data.AllowDeviceMappingForRegularUsers;
-  this.AllowStackManagementForRegularUsers = data.AllowStackManagementForRegularUsers;
-  this.AllowContainerCapabilitiesForRegularUsers = data.AllowContainerCapabilitiesForRegularUsers;
+  this.openAMTConfiguration = data.openAMTConfiguration;
+  this.fdoConfiguration = data.fdoConfiguration;
   this.SnapshotInterval = data.SnapshotInterval;
   this.TemplatesURL = data.TemplatesURL;
-  this.EnableHostManagementFeatures = data.EnableHostManagementFeatures;
   this.EdgeAgentCheckinInterval = data.EdgeAgentCheckinInterval;
   this.EnableEdgeComputeFeatures = data.EnableEdgeComputeFeatures;
+  this.FeatureFlagSettings = data.FeatureFlagSettings;
   this.UserSessionTimeout = data.UserSessionTimeout;
   this.EnableTelemetry = data.EnableTelemetry;
+  this.KubeconfigExpiry = data.KubeconfigExpiry;
+  this.HelmRepositoryURL = data.HelmRepositoryURL;
+  this.TrustOnFirstConnect = data.TrustOnFirstConnect;
+  this.EnforceEdgeID = data.EnforceEdgeID;
+  this.AgentSecret = data.AgentSecret;
+  this.EdgePortainerUrl = data.EdgePortainerUrl;
 }
 
 export function PublicSettingsViewModel(settings) {
-  this.AllowBindMountsForRegularUsers = settings.AllowBindMountsForRegularUsers;
-  this.AllowPrivilegedModeForRegularUsers = settings.AllowPrivilegedModeForRegularUsers;
-  this.AllowVolumeBrowserForRegularUsers = settings.AllowVolumeBrowserForRegularUsers;
-  this.AllowDeviceMappingForRegularUsers = settings.AllowDeviceMappingForRegularUsers;
-  this.AllowStackManagementForRegularUsers = settings.AllowStackManagementForRegularUsers;
-  this.AllowContainerCapabilitiesForRegularUsers = settings.AllowContainerCapabilitiesForRegularUsers;
-  this.AllowHostNamespaceForRegularUsers = settings.AllowHostNamespaceForRegularUsers;
   this.AuthenticationMethod = settings.AuthenticationMethod;
-  this.EnableHostManagementFeatures = settings.EnableHostManagementFeatures;
+  this.TeamSync = settings.TeamSync;
+  this.RequiredPasswordLength = settings.RequiredPasswordLength;
   this.EnableEdgeComputeFeatures = settings.EnableEdgeComputeFeatures;
+  this.EnforceEdgeID = settings.EnforceEdgeID;
   this.LogoURL = settings.LogoURL;
   this.OAuthLoginURI = settings.OAuthLoginURI;
-  this.OAuthLogoutURI = settings.OAuthLogoutURI;
   this.EnableTelemetry = settings.EnableTelemetry;
+  this.OAuthLogoutURI = settings.OAuthLogoutURI;
+  this.KubeconfigExpiry = settings.KubeconfigExpiry;
+  this.Features = settings.Features;
+  this.Edge = new EdgeSettingsViewModel(settings.Edge);
+  this.DefaultRegistry = settings.DefaultRegistry;
+  this.IsAMTEnabled = settings.IsAMTEnabled;
+  this.IsFDOEnabled = settings.IsFDOEnabled;
+}
+
+export function InternalAuthSettingsViewModel(data) {
+  this.RequiredPasswordLength = data.RequiredPasswordLength;
 }
 
 export function LDAPSettingsViewModel(data) {
@@ -65,9 +72,18 @@ export function OAuthSettingsViewModel(data) {
   this.AuthorizationURI = data.AuthorizationURI;
   this.ResourceURI = data.ResourceURI;
   this.RedirectURI = data.RedirectURI;
-  this.LogoutURI = data.LogoutURI;
   this.UserIdentifier = data.UserIdentifier;
   this.Scopes = data.Scopes;
   this.OAuthAutoCreateUsers = data.OAuthAutoCreateUsers;
   this.DefaultTeamID = data.DefaultTeamID;
+  this.SSO = data.SSO;
+  this.LogoutURI = data.LogoutURI;
+}
+
+export function EdgeSettingsViewModel(data = {}) {
+  this.CheckinInterval = data.CheckinInterval;
+  this.PingInterval = data.PingInterval;
+  this.SnapshotInterval = data.SnapshotInterval;
+  this.CommandInterval = data.CommandInterval;
+  this.AsyncMode = data.AsyncMode;
 }
