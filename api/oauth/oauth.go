@@ -19,6 +19,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	attributesIdentifier = "attributes"
+)
+
 // Service represents a service used to authenticate users against an authorization server
 type Service struct{}
 
@@ -27,15 +31,25 @@ func NewService() *Service {
 	return &Service{}
 }
 
+type cesAttribute struct {
+	Username    string   `json:"username,omitempty"`
+	Cn          string   `json:"cn,omitempty"`
+	Mail        string   `json:"mail,omitempty"`
+	GivenName   string   `json:"givenName,omitempty"`
+	Surname     string   `json:"surname,omitempty"`
+	DisplayName string   `json:"displayName,omitempty"`
+	Groups      []string `json:"groups,omitempty"`
+}
+
 // Authenticate takes an access code and exchanges it for an access token from portainer OAuthSettings token environment(endpoint).
 // On success, it will then return the username and token expiry time associated to authenticated user by fetching this information
 // from the resource server and matching it with the user identifier setting.
-func (*Service) Authenticate(code string, configuration *portainer.OAuthSettings) (string, error) {
+func (*Service) Authenticate(code string, configuration *portainer.OAuthSettings) (portainer.OAuthUserData, error) {
 	token, err := getOAuthToken(code, configuration)
 	if err != nil {
 		log.Debug().Err(err).Msg("failed retrieving oauth token")
 
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	idToken, err := getIdToken(token)
@@ -47,19 +61,57 @@ func (*Service) Authenticate(code string, configuration *portainer.OAuthSettings
 	if err != nil {
 		log.Debug().Err(err).Msg("failed retrieving resource")
 
-		return "", err
+		return portainer.OAuthUserData{}, err
 	}
 
 	resource = mergeSecondIntoFirst(idToken, resource)
 
-	username, err := getUsername(resource, configuration)
+	userData, err := getUserData(token, resource, configuration.UserIdentifier)
 	if err != nil {
-		log.Debug().Err(err).Msg("failed retrieving username")
-
-		return "", err
+		log.Debug().Err(err).Msg("failed retrieving userData")
+		return portainer.OAuthUserData{}, err
 	}
 
-	return username, nil
+	return userData, nil
+}
+
+func getUserData(token *oauth2.Token, datamap map[string]any, userIdentifier string) (portainer.OAuthUserData, error) {
+	if username, ok := datamap[userIdentifier]; ok && username != "" {
+		log.Debug().Msgf("datamap: %v", datamap)
+		var attribute cesAttribute
+		decodeConfig := &mapstructure.DecoderConfig{
+			DecodeHook:       decodeStringToStringSlice,
+			WeaklyTypedInput: true,
+			Result:           &attribute,
+		}
+		decoder, err := mapstructure.NewDecoder(decodeConfig)
+		if err != nil {
+			return portainer.OAuthUserData{}, err
+		}
+		err = decoder.Decode(datamap[attributesIdentifier])
+		if err != nil {
+			return portainer.OAuthUserData{}, err
+		}
+		userData := portainer.OAuthUserData{
+			Username:   username.(string),
+			OAuthToken: token,
+			Teams:      attribute.Groups,
+		}
+		return userData, nil
+	}
+
+	return portainer.OAuthUserData{}, errors.New("no valid user data found in response data")
+}
+
+func decodeStringToStringSlice(from reflect.Type, to reflect.Type, data interface{}) (interface{}, error) {
+	if from.Kind() == reflect.String && to.Kind() == reflect.Slice {
+		var result []string
+		if data != nil && data != "" {
+			result = append(result, data.(string))
+		}
+		return result, nil
+	}
+	return data, nil
 }
 
 // mergeSecondIntoFirst merges the overlap map into the base overwriting any existing values.

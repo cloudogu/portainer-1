@@ -219,6 +219,7 @@ func composeTokenData(user *portainer.User, forceChangePassword bool) *portainer
 		ID:                  user.ID,
 		Username:            user.Username,
 		Role:                user.Role,
+		OAuthToken:          user.OAuthToken,
 		ForceChangePassword: forceChangePassword,
 	}
 }

@@ -152,6 +152,12 @@ type (
 		BucketName() string
 	}
 
+	// BlocklistedJWTService represents a service for blocking specific authentication tokens
+	BlocklistedJWTService interface {
+		JWTService
+		AddTokenToBlocklist(token string)
+	}
+
 	// JWTService represents a service for managing JWT tokens
 	JWTService interface {
 		GenerateToken(data *portainer.TokenData) (string, error)

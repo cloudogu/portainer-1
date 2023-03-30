@@ -21,6 +21,7 @@ angular.module('portainer.app').factory('Authentication', [
 
     service.init = init;
     service.OAuthLogin = OAuthLogin;
+    service.OAuthIsTokenValid = OAuthIsTokenValid;
     service.login = login;
     service.logout = logout;
     service.isAuthenticated = isAuthenticated;
@@ -37,6 +38,7 @@ angular.module('portainer.app').factory('Authentication', [
         return true;
       } catch (error) {
         console.log('Unable to initialize authentication service', error);
+        LocalStorage.cleanAuthData();
         return tryAutoLoginExtension();
       }
     }
@@ -66,6 +68,19 @@ angular.module('portainer.app').factory('Authentication', [
       const response = await OAuth.validate({ code: code }).$promise;
       const jwt = setJWTFromResponse(response);
       await setUser(jwt);
+    }
+
+    async function OAuthIsTokenValid() {
+      const jwt = LocalStorage.getJWT();
+      if (jwt) {
+        return await OAuth.verifyToken({ token: jwt })
+          .$promise.then(function (response) {
+            return response && response.valid;
+          })
+          .catch(function () {
+            return false;
+          });
+      }
     }
 
     function setJWTFromResponse(response) {

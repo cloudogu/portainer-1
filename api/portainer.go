@@ -406,6 +406,12 @@ type (
 		Tags []string `json:"Tags"`
 	}
 
+	OAuthUserData struct {
+		Username   string        `json:"Username"`
+		OAuthToken *oauth2.Token `json:"OAuthToken"`
+		Teams      []string      `json:"Teams"`
+	}
+
 	// EndpointAuthorizations represents the authorizations associated to a set of environments(endpoints)
 	EndpointAuthorizations map[EndpointID]Authorizations
 
@@ -693,6 +699,7 @@ type (
 		SSO                  bool   `json:"SSO"`
 		LogoutURI            string `json:"LogoutURI"`
 		KubeSecretKey        []byte `json:"KubeSecretKey"`
+		AdminGroup           string `json:"AdminGroup"`
 	}
 
 	// Pair defines a key/value string pair
@@ -1215,6 +1222,7 @@ type (
 		ID                  UserID
 		Username            string
 		Role                UserRole
+		OAuthToken          *oauth2.Token
 		ForceChangePassword bool
 	}
 
@@ -1251,6 +1259,7 @@ type (
 		PortainerAuthorizations Authorizations
 		// Deprecated in DBVersion == 25
 		EndpointAuthorizations EndpointAuthorizations
+		OAuthToken             *oauth2.Token
 	}
 
 	// UserAccessPolicies represent the association of an access policy and a user
@@ -1453,7 +1462,7 @@ type (
 
 	// OAuthService represents a service used to authenticate users using OAuth
 	OAuthService interface {
-		Authenticate(code string, configuration *OAuthSettings) (string, error)
+		Authenticate(code string, configuration *OAuthSettings) (OAuthUserData, error)
 	}
 
 	// ReverseTunnelService represents a service used to manage reverse tunnel connections.

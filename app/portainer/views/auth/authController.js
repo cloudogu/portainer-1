@@ -1,6 +1,5 @@
 import angular from 'angular';
 import uuidv4 from 'uuid/v4';
-import { getEnvironments } from '@/react/portainer/environments/environment.service';
 
 class AuthenticationController {
   /* @ngInject */
@@ -59,6 +58,7 @@ class AuthenticationController {
 
     this.manageOauthCodeReturn = this.manageOauthCodeReturn.bind(this);
     this.authEnabledFlowAsync = this.authEnabledFlowAsync.bind(this);
+    this.isTokenValid = this.isTokenValid.bind(this);
     this.onInit = this.onInit.bind(this);
   }
 
@@ -129,18 +129,7 @@ class AuthenticationController {
 
   async checkForEndpointsAsync() {
     try {
-      const isAdmin = this.Authentication.isAdmin();
-      const endpoints = await getEnvironments({ limit: 1 });
-
-      if (this.Authentication.getUserDetails().forceChangePassword) {
-        return this.$state.go('portainer.account');
-      }
-
-      if (endpoints.value.length === 0 && isAdmin) {
-        return this.$state.go('portainer.wizard');
-      } else {
-        return this.$state.go('portainer.home');
-      }
+      return this.$state.go('portainer.home');
     } catch (err) {
       this.error(err, 'Unable to retrieve environments');
     }
@@ -226,6 +215,14 @@ class AuthenticationController {
     }
   }
 
+  async isTokenValid() {
+    try {
+      return await this.Authentication.OAuthIsTokenValid();
+    } catch (err) {
+      return false;
+    }
+  }
+
   toggleStandardLogin() {
     this.state.showStandardLogin = !this.state.showStandardLogin;
   }
@@ -263,10 +260,12 @@ class AuthenticationController {
 
       if (this.Authentication.isAuthenticated()) {
         await this.postLoginSteps();
+      } else {
+        document.location.href = this.OAuthLoginURI;
+        return;
       }
-      this.state.loginInProgress = false;
 
-      await this.authEnabledFlowAsync();
+      this.state.loginInProgress = false;
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve public settings');
     }

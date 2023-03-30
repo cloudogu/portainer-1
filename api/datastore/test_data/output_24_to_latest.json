@@ -632,6 +632,7 @@
     "LogoURL": "",
     "OAuthSettings": {
       "AccessTokenURI": "",
+      "AdminGroup": "",
       "AuthorizationURI": "",
       "ClientID": "",
       "DefaultTeamID": 0,
@@ -882,6 +883,7 @@
     {
       "EndpointAuthorizations": null,
       "Id": 1,
+      "OAuthToken": null,
       "Password": "$2a$10$siRDprr/5uUFAU8iom3Sr./WXQkN2dhSNjAC471pkJaALkghS762a",
       "PortainerAuthorizations": {
         "PortainerDockerHubInspect": true,
@@ -913,6 +915,7 @@
     {
       "EndpointAuthorizations": null,
       "Id": 2,
+      "OAuthToken": null,
       "Password": "$2a$10$WpCAW8mSt6FRRp1GkynbFOGSZnHR6E5j9cETZ8HiMlw06hVlDW/Li",
       "PortainerAuthorizations": {
         "PortainerDockerHubInspect": true,

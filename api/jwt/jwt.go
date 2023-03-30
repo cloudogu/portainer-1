@@ -15,6 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// change settings timeout accordingly, current 24h = 86400
+	blocklistTokenTTL = 86400
+)
+
 // scope represents JWT scopes that are supported in JWT claims.
 type scope string
 
@@ -23,12 +28,14 @@ type Service struct {
 	secrets            map[scope][]byte
 	userSessionTimeout time.Duration
 	dataStore          dataservices.DataStore
+	tokenBlocklist     *BlocklistTokenMap
 }
 
 type claims struct {
 	UserID              int    `json:"id"`
 	Username            string `json:"username"`
 	Role                int    `json:"role"`
+	OAuthToken          string `json:"oauth_token"`
 	Scope               scope  `json:"scope"`
 	ForceChangePassword bool   `json:"forceChangePassword"`
 	jwt.StandardClaims
@@ -61,6 +68,8 @@ func NewService(userSessionDuration string, dataStore dataservices.DataStore) (*
 		return nil, err
 	}
 
+	tokenBlocklist := NewBlocklistTokenMap(blocklistTokenTTL, time.Hour)
+
 	service := &Service{
 		map[scope][]byte{
 			defaultScope:    secret,
@@ -68,6 +77,7 @@ func NewService(userSessionDuration string, dataStore dataservices.DataStore) (*
 		},
 		userSessionTimeout,
 		dataStore,
+		tokenBlocklist,
 	}
 	return service, nil
 }
@@ -135,11 +145,20 @@ func (service *Service) ParseAndVerifyToken(token string) (*portainer.TokenData,
 				return nil, errInvalidJWTToken
 			}
 
-			return &portainer.TokenData{
-				ID:       portainer.UserID(cl.UserID),
-				Username: cl.Username,
-				Role:     portainer.UserRole(cl.Role),
-			}, nil
+			tokenData := &portainer.TokenData{
+				ID:         portainer.UserID(cl.UserID),
+				Username:   cl.Username,
+				Role:       portainer.UserRole(cl.Role),
+				OAuthToken: &oauth2.Token{AccessToken: cl.OAuthToken},
+			}
+
+			if tokenData.OAuthToken.AccessToken != "" {
+				if service.tokenBlocklist.IsBlocked(tokenData.OAuthToken.AccessToken) {
+					return nil, errInvalidJWTToken
+				}
+			}
+
+			return tokenData, nil
 		}
 	}
 	return nil, errInvalidJWTToken
@@ -175,11 +194,15 @@ func (service *Service) generateSignedToken(data *portainer.TokenData, expiresAt
 		log.Info().Msg("detected docker desktop extension mode")
 		expiresAt = time.Now().Add(time.Hour * 8760 * 99).Unix()
 	}
-
+	tokenData := ""
+	if data.OAuthToken != nil {
+		tokenData = data.OAuthToken.AccessToken
+	}
 	cl := claims{
 		UserID:              int(data.ID),
 		Username:            data.Username,
 		Role:                int(data.Role),
+		OAuthToken:          tokenData,
 		Scope:               scope,
 		ForceChangePassword: data.ForceChangePassword,
 		StandardClaims: jwt.StandardClaims{
@@ -195,4 +218,9 @@ func (service *Service) generateSignedToken(data *portainer.TokenData, expiresAt
 	}
 
 	return signedToken, nil
+}
+
+// AddTokenToBlocklist adds a token identifier to the token list
+func (service *Service) AddTokenToBlocklist(token string) {
+	service.tokenBlocklist.Put(token)
 }

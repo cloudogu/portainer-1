@@ -30,8 +30,8 @@ export function PublicSettingsViewModel(settings) {
   this.EnforceEdgeID = settings.EnforceEdgeID;
   this.LogoURL = settings.LogoURL;
   this.OAuthLoginURI = settings.OAuthLoginURI;
-  this.EnableTelemetry = settings.EnableTelemetry;
   this.OAuthLogoutURI = settings.OAuthLogoutURI;
+  this.EnableTelemetry = settings.EnableTelemetry;
   this.KubeconfigExpiry = settings.KubeconfigExpiry;
   this.Features = settings.Features;
   this.Edge = new EdgeSettingsViewModel(settings.Edge);
@@ -72,12 +72,12 @@ export function OAuthSettingsViewModel(data) {
   this.AuthorizationURI = data.AuthorizationURI;
   this.ResourceURI = data.ResourceURI;
   this.RedirectURI = data.RedirectURI;
+  this.LogoutURI = data.LogoutURI;
   this.UserIdentifier = data.UserIdentifier;
   this.Scopes = data.Scopes;
   this.OAuthAutoCreateUsers = data.OAuthAutoCreateUsers;
   this.DefaultTeamID = data.DefaultTeamID;
   this.SSO = data.SSO;
-  this.LogoutURI = data.LogoutURI;
 }
 
 export function EdgeSettingsViewModel(data = {}) {
