@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

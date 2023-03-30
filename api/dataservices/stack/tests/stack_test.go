@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/portainer/portainer/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/datastore"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
 	"github.com/gofrs/uuid"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/filesystem"
 	"github.com/stretchr/testify/assert"
 )
 

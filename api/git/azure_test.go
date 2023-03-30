@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"testing"
 
-	gittypes "github.com/portainer/portainer/api/git/types"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
 	"github.com/stretchr/testify/assert"
 )
 

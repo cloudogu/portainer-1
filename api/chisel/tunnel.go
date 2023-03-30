@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/edge/cache"
 	"github.com/portainer/libcrypto"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/edge/cache"
 
 	"github.com/dchest/uniuri"
 )

@@ -3,10 +3,10 @@ package middlewares
 import (
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
 )
 
 func FeatureFlag(settingsService dataservices.SettingsService, feature portainer.Feature) mux.MiddlewareFunc {

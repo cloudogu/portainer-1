@@ -4,16 +4,16 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/handler/docker/containers"
+	"github.com/cloudogu/portainer-ce/api/http/middlewares"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/handler/docker/containers"
-	"github.com/portainer/portainer/api/http/middlewares"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/authorization"
 )
 
 // Handler is the HTTP handler which will natively deal with to external environments(endpoints).

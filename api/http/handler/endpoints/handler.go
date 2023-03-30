@@ -1,13 +1,13 @@
 package endpoints
 
 import (
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/demo"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/demo"
-	"github.com/portainer/portainer/api/http/proxy"
-	"github.com/portainer/portainer/api/internal/authorization"
-	"github.com/portainer/portainer/api/kubernetes/cli"
 
 	"net/http"
 

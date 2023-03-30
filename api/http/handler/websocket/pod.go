@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy/factory/kubernetes"
-	"github.com/portainer/portainer/api/http/security"
 
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog/log"

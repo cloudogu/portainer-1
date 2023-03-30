@@ -3,11 +3,11 @@ package users
 import (
 	"net/http"
 
-	"github.com/portainer/portainer/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 )
 
 // @id UserAdminCheck

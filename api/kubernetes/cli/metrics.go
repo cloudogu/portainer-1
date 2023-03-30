@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
 )
 
 func (kcl *KubeClient) GetMetrics() (models.K8sMetrics, error) {

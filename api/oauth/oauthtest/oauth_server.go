@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/gorilla/mux"
-	portainer "github.com/portainer/portainer/api"
 )
 
 const (

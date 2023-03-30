@@ -3,13 +3,13 @@ package system
 import (
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/demo"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/upgrade"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/demo"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/upgrade"
 )
 
 // Handler is the HTTP handler used to handle status operations.

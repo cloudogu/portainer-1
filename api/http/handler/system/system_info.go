@@ -3,10 +3,10 @@ package system
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	plf "github.com/cloudogu/portainer-ce/api/platform"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	plf "github.com/portainer/portainer/api/platform"
 )
 
 type systemInfoResponse struct {

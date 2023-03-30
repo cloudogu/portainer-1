@@ -3,13 +3,14 @@ package jwt
 import (
 	"errors"
 	"fmt"
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/oauth2"
 	"os"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/securecookie"
 	"github.com/rs/zerolog/log"
 )

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/cli"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/datastore"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/cli"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/datastore"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/alecthomas/kingpin.v2"

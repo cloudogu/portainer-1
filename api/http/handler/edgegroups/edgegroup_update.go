@@ -4,13 +4,13 @@ import (
 	"errors"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/internal/slices"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/edge"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	"github.com/portainer/portainer/api/internal/slices"
 
 	"github.com/asaskevich/govalidator"
 )

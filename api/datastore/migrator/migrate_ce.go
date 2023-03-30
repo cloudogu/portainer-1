@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"runtime"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
 
 	"github.com/Masterminds/semver"
 	"github.com/rs/zerolog/log"

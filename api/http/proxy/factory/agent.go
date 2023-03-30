@@ -5,11 +5,11 @@ import (
 	"net"
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/http/proxy/factory/agent"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	"github.com/portainer/portainer/api/internal/url"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/agent"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/internal/url"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

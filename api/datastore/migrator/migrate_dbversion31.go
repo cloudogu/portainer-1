@@ -3,10 +3,10 @@ package migrator
 import (
 	"fmt"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices/errors"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	snapshotutils "github.com/portainer/portainer/api/internal/snapshot"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	snapshotutils "github.com/cloudogu/portainer-ce/api/internal/snapshot"
 
 	"github.com/docker/docker/api/types/volume"
 	"github.com/rs/zerolog/log"

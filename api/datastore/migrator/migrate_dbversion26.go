@@ -1,9 +1,9 @@
 package migrator
 
 import (
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices/errors"
-	"github.com/portainer/portainer/api/stacks/stackutils"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 
 	"github.com/rs/zerolog/log"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

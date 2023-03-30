@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/internal/slices"
 	"github.com/pkg/errors"
 	"github.com/portainer/libhttp/request"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	"github.com/portainer/portainer/api/internal/slices"
 )
 
 type EnvironmentsQuery struct {

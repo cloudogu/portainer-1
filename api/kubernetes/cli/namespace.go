@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

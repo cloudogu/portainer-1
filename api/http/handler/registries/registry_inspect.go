@@ -3,12 +3,12 @@ package registries
 import (
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	httperrors "github.com/portainer/portainer/api/http/errors"
 )
 
 // @id RegistryInspect

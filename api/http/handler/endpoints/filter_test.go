@@ -3,10 +3,10 @@ package endpoints
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/internal/testhelpers"
-	helper "github.com/portainer/portainer/api/internal/testhelpers"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/internal/testhelpers"
+	helper "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 

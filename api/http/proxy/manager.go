@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/proxy/factory/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/kubernetes"
 
+	"github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/portainer/portainer/api/kubernetes/cli"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/http/proxy/factory"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory"
 )
 
 type (

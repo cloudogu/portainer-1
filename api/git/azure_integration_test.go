@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
 	_ "github.com/joho/godotenv/autoload"
-	gittypes "github.com/portainer/portainer/api/git/types"
 	"github.com/stretchr/testify/assert"
 )
 

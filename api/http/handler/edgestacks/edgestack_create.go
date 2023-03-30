@@ -5,14 +5,14 @@ import (
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/pkg/errors"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/filesystem"
-	gittypes "github.com/portainer/portainer/api/git/types"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 type InvalidPayloadError struct {

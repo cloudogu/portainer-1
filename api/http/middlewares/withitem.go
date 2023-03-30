@@ -5,10 +5,10 @@ import (
 	"errors"
 	"net/http"
 
+	bolterrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	bolterrors "github.com/portainer/portainer/api/dataservices/errors"
 )
 
 type ItemContextKey string

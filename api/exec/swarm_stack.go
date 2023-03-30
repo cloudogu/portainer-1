@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"strings"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/internal/registryutils"
-	"github.com/portainer/portainer/api/stacks/stackutils"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/internal/registryutils"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 )
 
 // SwarmStackManager represents a service for managing stacks.

@@ -3,7 +3,7 @@ package security
 import (
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 // IsAdmin returns true if the logged-in user is an admin

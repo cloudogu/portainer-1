@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
 
 	"github.com/rs/zerolog/log"
 )

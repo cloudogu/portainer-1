@@ -7,8 +7,8 @@ import (
 	"path"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
-	portainerErrors "github.com/portainer/portainer/api/dataservices/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	portainerErrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
 
 	"github.com/rs/zerolog/log"
 )

@@ -1,12 +1,12 @@
 package stackbuilders
 
 import (
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/scheduler"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/scheduler"
-	"github.com/portainer/portainer/api/stacks/deployments"
 )
 
 type ComposeStackGitBuilder struct {

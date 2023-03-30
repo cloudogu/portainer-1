@@ -6,17 +6,17 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/exec/exectest"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/jwt"
-	"github.com/portainer/portainer/api/kubernetes"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/exec/exectest"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/jwt"
+	"github.com/cloudogu/portainer-ce/api/kubernetes"
 	"github.com/portainer/portainer/pkg/libhelm/binary/test"
 	"github.com/portainer/portainer/pkg/libhelm/options"
 	"github.com/stretchr/testify/assert"
 
-	helper "github.com/portainer/portainer/api/internal/testhelpers"
+	helper "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 )
 
 func Test_helmDelete(t *testing.T) {

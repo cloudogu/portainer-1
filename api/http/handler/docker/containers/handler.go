@@ -3,10 +3,10 @@ package containers
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 type Handler struct {

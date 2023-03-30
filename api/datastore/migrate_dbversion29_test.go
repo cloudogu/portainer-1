@@ -3,9 +3,9 @@ package datastore
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore/migrator"
-	"github.com/portainer/portainer/api/internal/authorization"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/datastore/migrator"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 )
 
 const dummyLogoURL = "example.com"

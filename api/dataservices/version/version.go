@@ -3,10 +3,10 @@ package version
 import (
 	"errors"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/database/models"
-	"github.com/portainer/portainer/api/dataservices"
-	dserrors "github.com/portainer/portainer/api/dataservices/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/database/models"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	dserrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
 )
 
 const (

@@ -4,9 +4,9 @@ import (
 	"context"
 	"os"
 
+	"github.com/cloudogu/portainer-ce/api/docker"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
-	"github.com/portainer/portainer/api/docker"
 	"github.com/rs/zerolog/log"
 )
 

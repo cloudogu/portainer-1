@@ -6,19 +6,19 @@ import (
 	"net/url"
 	"strconv"
 
-	portainer "github.com/portainer/portainer/api"
-	portainerDsErrors "github.com/portainer/portainer/api/dataservices/errors"
-	"github.com/portainer/portainer/api/kubernetes"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	portainerDsErrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/kubernetes"
 
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/middlewares"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/middlewares"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/authorization"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	"github.com/portainer/portainer/api/kubernetes/cli"
 )
 
 // Handler is the HTTP handler which will natively deal with to external environments(endpoints).

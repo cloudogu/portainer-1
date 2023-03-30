@@ -3,7 +3,7 @@ package oauth
 import (
 	"testing"
 
-	portaineree "github.com/portainer/portainer/api"
+	portaineree "github.com/cloudogu/portainer-ce/api"
 )
 
 func Test_getUsername(t *testing.T) {

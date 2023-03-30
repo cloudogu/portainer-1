@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/gofrs/uuid"
-	portainer "github.com/portainer/portainer/api"
 
 	"io"
 	"os"

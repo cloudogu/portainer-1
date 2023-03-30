@@ -2,12 +2,13 @@ package auth
 
 import (
 	"errors"
+	bolterrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	portainer "github.com/portainer/portainer/api"
-	httperrors "github.com/portainer/portainer/api/http/errors"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/rs/zerolog/log"

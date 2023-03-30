@@ -4,14 +4,14 @@ import (
 	"context"
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
 	"github.com/docker/docker/api/types"
 
 	"github.com/docker/docker/client"
 
-	"github.com/portainer/portainer/api/http/proxy/factory/utils"
-	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/utils"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 )
 
 const (

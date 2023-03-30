@@ -1,8 +1,8 @@
 package chisel
 
 import (
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/edge/cache"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/edge/cache"
 )
 
 // AddEdgeJob register an EdgeJob inside the tunnel details associated to an environment(endpoint).

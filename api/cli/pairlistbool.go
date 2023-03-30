@@ -3,7 +3,7 @@ package cli
 import (
 	"strings"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

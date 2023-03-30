@@ -3,7 +3,7 @@ package security
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 func TestStrengthCheck(t *testing.T) {

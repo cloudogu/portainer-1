@@ -5,12 +5,12 @@ import (
 	"errors"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
 	requesthelpers "github.com/portainer/libhttp/request"
-	portainer "github.com/portainer/portainer/api"
 
-	"github.com/portainer/portainer/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 )
 
 const (

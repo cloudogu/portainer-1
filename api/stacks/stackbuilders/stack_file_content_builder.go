@@ -3,8 +3,8 @@ package stackbuilders
 import (
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
 )
 
 type FileContentMethodStackBuildProcess interface {

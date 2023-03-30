@@ -3,12 +3,12 @@ package auth
 import (
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/proxy"
-	"github.com/portainer/portainer/api/http/proxy/factory/kubernetes"
-	"github.com/portainer/portainer/api/http/security"
 
 	"github.com/gorilla/mux"
 )

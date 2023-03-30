@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/portainer/portainer/api/database/boltdb"
+	"github.com/cloudogu/portainer-ce/api/database/boltdb"
 
+	"github.com/cloudogu/portainer-ce/api/database/models"
 	"github.com/google/go-cmp/cmp"
-	"github.com/portainer/portainer/api/database/models"
 	"github.com/rs/zerolog/log"
 )
 

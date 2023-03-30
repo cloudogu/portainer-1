@@ -3,9 +3,9 @@ package stackutils
 import (
 	"fmt"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
 )
 
 var (

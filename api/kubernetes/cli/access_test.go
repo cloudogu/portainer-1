@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/stretchr/testify/assert"
 	ktypes "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

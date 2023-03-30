@@ -7,14 +7,14 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	k "github.com/cloudogu/portainer-ce/api/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackbuilders"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	k "github.com/portainer/portainer/api/kubernetes"
-	"github.com/portainer/portainer/api/stacks/deployments"
-	"github.com/portainer/portainer/api/stacks/stackbuilders"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type kubernetesStringDeploymentPayload struct {

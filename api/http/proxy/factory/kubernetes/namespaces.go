@@ -3,8 +3,8 @@ package kubernetes
 import (
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
 )
 
 func (transport *baseTransport) proxyNamespaceDeleteOperation(request *http.Request, namespace string) (*http.Response, error) {

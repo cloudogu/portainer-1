@@ -8,12 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/snapshot"
-	"github.com/portainer/portainer/api/internal/testhelpers"
-	helper "github.com/portainer/portainer/api/internal/testhelpers"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/snapshot"
+	"github.com/cloudogu/portainer-ce/api/internal/testhelpers"
+	helper "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/build"
+	"github.com/cloudogu/portainer-ce/api/http/client"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/build"
-	"github.com/portainer/portainer/api/http/client"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/rs/zerolog/log"

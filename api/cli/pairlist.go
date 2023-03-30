@@ -1,7 +1,7 @@
 package cli
 
 import (
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
 	"fmt"
 	"strings"

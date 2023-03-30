@@ -3,10 +3,10 @@ package endpoints
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/set"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/set"
 )
 
 // @id AgentVersions

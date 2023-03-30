@@ -3,13 +3,13 @@ package users
 import (
 	"errors"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
 
-	"github.com/portainer/portainer/api/apikey"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/demo"
-	"github.com/portainer/portainer/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/apikey"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/demo"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 
 	"net/http"
 

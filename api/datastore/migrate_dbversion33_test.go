@@ -3,9 +3,9 @@ package datastore
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/datastore/migrator"
-	gittypes "github.com/portainer/portainer/api/git/types"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/datastore/migrator"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
 	"github.com/stretchr/testify/assert"
 )
 

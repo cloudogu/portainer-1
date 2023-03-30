@@ -4,7 +4,7 @@ import (
 	"strconv"
 
 	"github.com/VictoriaMetrics/fastcache"
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 var c = fastcache.New(1)

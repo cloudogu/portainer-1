@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"testing"
 
-	helper "github.com/portainer/portainer/api/internal/testhelpers"
+	helper "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/portainer/portainer/pkg/libhelm/binary/test"
 	"github.com/stretchr/testify/assert"
 )

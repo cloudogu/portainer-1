@@ -3,11 +3,11 @@ package webhooks
 import (
 	"net/http"
 
-	"github.com/portainer/portainer/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/http/security"
 
 	"github.com/gorilla/mux"
 )

@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/portainer/portainer/api/adminmonitor"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/demo"
-	"github.com/portainer/portainer/api/http/offlinegate"
-	i "github.com/portainer/portainer/api/internal/testhelpers"
+	"github.com/cloudogu/portainer-ce/api/adminmonitor"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/demo"
+	"github.com/cloudogu/portainer-ce/api/http/offlinegate"
+	i "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 

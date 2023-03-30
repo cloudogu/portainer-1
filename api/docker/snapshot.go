@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
 	"github.com/docker/docker/api/types"
 	_container "github.com/docker/docker/api/types/container"

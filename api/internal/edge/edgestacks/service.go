@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/internal/edge"
-	edgetypes "github.com/portainer/portainer/api/internal/edge/types"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	edgetypes "github.com/cloudogu/portainer-ce/api/internal/edge/types"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

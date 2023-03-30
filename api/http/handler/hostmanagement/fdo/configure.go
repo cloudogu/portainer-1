@@ -3,16 +3,16 @@ package fdo
 import (
 	"encoding/hex"
 	"errors"
+	"github.com/fxamacker/cbor/v2"
 	"net/http"
 	"net/url"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 
-	"github.com/fxamacker/cbor/v2"
 	"github.com/rs/zerolog/log"
 )
 

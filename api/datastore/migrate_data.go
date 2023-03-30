@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	portaineree "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/cli"
-	"github.com/portainer/portainer/api/database/models"
-	dserrors "github.com/portainer/portainer/api/dataservices/errors"
-	"github.com/portainer/portainer/api/datastore/migrator"
-	"github.com/portainer/portainer/api/internal/authorization"
+	portaineree "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/cli"
+	"github.com/cloudogu/portainer-ce/api/database/models"
+	dserrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/datastore/migrator"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

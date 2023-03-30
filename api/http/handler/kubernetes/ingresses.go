@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strconv"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	portainerDsErrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	portainerDsErrors "github.com/portainer/portainer/api/dataservices/errors"
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 func (handler *Handler) getKubernetesIngressControllers(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {

@@ -3,8 +3,8 @@ package endpoints
 import (
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/fvbommel/sortorder"
-	portainer "github.com/portainer/portainer/api"
 )
 
 type EndpointsByName []portainer.Endpoint

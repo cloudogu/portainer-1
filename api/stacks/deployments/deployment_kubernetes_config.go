@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	k "github.com/cloudogu/portainer-ce/api/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/filesystem"
-	k "github.com/portainer/portainer/api/kubernetes"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type KubernetesStackDeploymentConfig struct {

@@ -3,10 +3,10 @@ package kubernetes
 import (
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/kubernetes/cli"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 )
 
 type localTransport struct {

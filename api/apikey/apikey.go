@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"io"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 // APIKeyService represents a service for managing API keys.

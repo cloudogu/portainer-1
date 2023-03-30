@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"net/http"
 
-	"github.com/portainer/portainer/api/internal/registryutils"
+	"github.com/cloudogu/portainer-ce/api/internal/registryutils"
 )
 
 func (transport *baseTransport) refreshRegistry(request *http.Request, namespace string) (err error) {

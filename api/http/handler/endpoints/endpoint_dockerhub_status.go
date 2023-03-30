@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/client"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/client"
-	"github.com/portainer/portainer/api/internal/endpointutils"
 )
 
 type dockerhubStatusResponse struct {

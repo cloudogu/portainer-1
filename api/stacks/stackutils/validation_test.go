@@ -3,7 +3,7 @@ package stackutils
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/stretchr/testify/assert"
 )
 

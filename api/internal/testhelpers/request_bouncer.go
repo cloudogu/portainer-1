@@ -3,7 +3,7 @@ package testhelpers
 import (
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 type testRequestBouncer struct {

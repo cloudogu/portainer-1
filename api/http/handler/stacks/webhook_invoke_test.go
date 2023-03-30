@@ -5,10 +5,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/portainer/portainer/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/datastore"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/gofrs/uuid"
-	portainer "github.com/portainer/portainer/api"
 	"github.com/stretchr/testify/assert"
 )
 

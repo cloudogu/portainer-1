@@ -6,11 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/chisel"
+	"github.com/cloudogu/portainer-ce/api/crypto"
 	"github.com/dchest/uniuri"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/chisel"
-	"github.com/portainer/portainer/api/crypto"
 	"github.com/stretchr/testify/assert"
 )
 

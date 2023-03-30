@@ -10,7 +10,7 @@ import (
 	"path"
 	"time"
 
-	dserrors "github.com/portainer/portainer/api/dataservices/errors"
+	dserrors "github.com/cloudogu/portainer-ce/api/dataservices/errors"
 
 	"github.com/rs/zerolog/log"
 	bolt "go.etcd.io/bbolt"

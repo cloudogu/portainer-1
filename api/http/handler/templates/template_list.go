@@ -4,8 +4,8 @@ import (
 	"io"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
 )
 
 // introduced for swagger

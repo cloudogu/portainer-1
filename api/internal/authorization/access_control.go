@@ -3,8 +3,8 @@ package authorization
 import (
 	"strconv"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/stacks/stackutils"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 )
 
 // NewAdministratorsOnlyResourceControl will create a new administrators only resource control associated to the resource specified by the

@@ -4,12 +4,12 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/portainer/portainer/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 )
 
 // @summary Delete a webhook

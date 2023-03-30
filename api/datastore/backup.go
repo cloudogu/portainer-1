@@ -6,7 +6,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/portainer/portainer/api/database/models"
+	"github.com/cloudogu/portainer-ce/api/database/models"
 	"github.com/rs/zerolog/log"
 )
 

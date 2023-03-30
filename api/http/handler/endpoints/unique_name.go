@@ -1,6 +1,6 @@
 package endpoints
 
-import portainer "github.com/portainer/portainer/api"
+import portainer "github.com/cloudogu/portainer-ce/api"
 
 func (handler *Handler) isNameUnique(name string, endpointID portainer.EndpointID) (bool, error) {
 	endpoints, err := handler.DataStore.Endpoint().Endpoints()

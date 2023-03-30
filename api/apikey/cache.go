@@ -1,8 +1,8 @@
 package apikey
 
 import (
+	portainer "github.com/cloudogu/portainer-ce/api"
 	lru "github.com/hashicorp/golang-lru"
-	portainer "github.com/portainer/portainer/api"
 )
 
 const defaultAPIKeyCacheSize = 1024

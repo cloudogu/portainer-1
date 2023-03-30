@@ -4,13 +4,13 @@ import (
 	"strconv"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
+	"github.com/cloudogu/portainer-ce/api/scheduler"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/filesystem"
-	gittypes "github.com/portainer/portainer/api/git/types"
-	"github.com/portainer/portainer/api/scheduler"
-	"github.com/portainer/portainer/api/stacks/deployments"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type GitMethodStackBuildProcess interface {

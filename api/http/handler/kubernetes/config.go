@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
+	kcli "github.com/cloudogu/portainer-ce/api/kubernetes/cli"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/internal/endpointutils"
-	kcli "github.com/portainer/portainer/api/kubernetes/cli"
 	clientV1 "k8s.io/client-go/tools/clientcmd/api/v1"
 )
 

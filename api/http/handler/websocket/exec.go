@@ -8,9 +8,9 @@ import (
 	"net/http/httputil"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
-	portainer "github.com/portainer/portainer/api"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/websocket"

@@ -1,15 +1,15 @@
 package dataservices
 
-// 	"github.com/portainer/portainer/api/dataservices"
+// 	"github.com/cloudogu/portainer-ce/api/dataservices"
 
 import (
 	"io"
 	"time"
 
-	"github.com/portainer/portainer/api/database/models"
-	"github.com/portainer/portainer/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/database/models"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 type (

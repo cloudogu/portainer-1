@@ -3,10 +3,10 @@ package datastore
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/database"
-	"github.com/portainer/portainer/api/database/models"
-	"github.com/portainer/portainer/api/filesystem"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/database"
+	"github.com/cloudogu/portainer-ce/api/database/models"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
 
 	"github.com/rs/zerolog/log"
 )

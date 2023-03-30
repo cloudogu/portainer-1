@@ -6,17 +6,17 @@ import (
 	"net/http"
 
 	"github.com/asaskevich/govalidator"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 
 	"github.com/rs/zerolog/log"
 )
 
 type filePayload struct {
 	// URL of a git repository where the file is stored
-	RepositoryURL string `example:"https://github.com/portainer/portainer-compose" validate:"required"`
+	RepositoryURL string `example:"https://github.com/cloudogu/portainer-ce-compose" validate:"required"`
 	// Path to the file inside the git repository
 	ComposeFilePathInRepository string `example:"./subfolder/docker-compose.yml" validate:"required"`
 }

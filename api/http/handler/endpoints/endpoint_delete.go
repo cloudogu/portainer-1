@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	httperrors "github.com/portainer/portainer/api/http/errors"
-	"github.com/portainer/portainer/api/internal/endpointutils"
 )
 
 // @id EndpointDelete

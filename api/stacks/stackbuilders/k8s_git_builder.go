@@ -3,13 +3,13 @@ package stackbuilders
 import (
 	"sync"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	k "github.com/cloudogu/portainer-ce/api/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/scheduler"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	k "github.com/portainer/portainer/api/kubernetes"
-	"github.com/portainer/portainer/api/scheduler"
-	"github.com/portainer/portainer/api/stacks/deployments"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type KubernetesStackGitBuilder struct {

@@ -3,10 +3,10 @@ package stacks
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	"github.com/portainer/portainer/api/stacks/deployments"
 
 	"github.com/gofrs/uuid"
 	"github.com/rs/zerolog/log"

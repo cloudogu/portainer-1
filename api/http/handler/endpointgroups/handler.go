@@ -3,12 +3,12 @@ package endpointgroups
 import (
 	"net/http"
 
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/internal/authorization"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 // Handler is the HTTP handler used to handle environment(endpoint) group operations.

@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/url"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/url"
 )
 
 // GetAgentVersionAndPlatform returns the agent version and platform

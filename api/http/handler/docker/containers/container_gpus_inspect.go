@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/middlewares"
+	"github.com/cloudogu/portainer-ce/api/internal/slices"
 	containertypes "github.com/docker/docker/api/types/container"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/middlewares"
-	"github.com/portainer/portainer/api/internal/slices"
 )
 
 type containerGpusResponse struct {

@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"software.sslmate.com/src/go-pkcs12"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 
 	"github.com/rs/zerolog/log"
-	"software.sslmate.com/src/go-pkcs12"
 )
 
 type openAMTConfigurePayload struct {

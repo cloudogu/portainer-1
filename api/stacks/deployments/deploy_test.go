@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/portainer/portainer/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/datastore"
 
-	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
 	"github.com/stretchr/testify/assert"
 )
 

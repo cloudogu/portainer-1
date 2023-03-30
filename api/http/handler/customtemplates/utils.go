@@ -3,7 +3,7 @@ package customtemplates
 import (
 	"errors"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 func validateVariablesDefinitions(variables []portainer.CustomTemplateVariableDefinition) error {

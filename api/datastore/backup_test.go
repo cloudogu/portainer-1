@@ -6,8 +6,8 @@ import (
 	"path"
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/database/models"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/database/models"
 )
 
 func TestCreateBackupFolders(t *testing.T) {

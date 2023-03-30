@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/cloudogu/portainer-ce/api/archive"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/database/boltdb"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	"github.com/cloudogu/portainer-ce/api/http/offlinegate"
 	"github.com/pkg/errors"
-	"github.com/portainer/portainer/api/archive"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/database/boltdb"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/filesystem"
-	"github.com/portainer/portainer/api/http/offlinegate"
 )
 
 var filesToRestore = append(filesToBackup, "portainer.db")

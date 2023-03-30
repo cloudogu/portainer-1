@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 func getUsername(datamap map[string]interface{}, configuration *portainer.OAuthSettings) (string, error) {

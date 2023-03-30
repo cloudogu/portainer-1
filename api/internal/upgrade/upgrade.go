@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"github.com/cbroglie/mustache"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/docker"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	"github.com/cloudogu/portainer-ce/api/platform"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/pkg/errors"
 	libstack "github.com/portainer/docker-compose-wrapper"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/docker"
-	"github.com/portainer/portainer/api/filesystem"
-	"github.com/portainer/portainer/api/platform"
 	"github.com/rs/zerolog/log"
 )
 

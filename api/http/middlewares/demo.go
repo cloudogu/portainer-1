@@ -3,9 +3,9 @@ package middlewares
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/http/errors"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/http/errors"
 )
 
 // restrict functionality on demo environments

@@ -1,4 +1,4 @@
-module github.com/portainer/portainer/api
+module github.com/cloudogu/portainer-ce/api
 
 go 1.18
 

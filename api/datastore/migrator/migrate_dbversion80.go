@@ -1,8 +1,8 @@
 package migrator
 
 import (
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/endpointutils"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 
 	"github.com/rs/zerolog/log"
 )

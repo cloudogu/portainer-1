@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	"github.com/portainer/libcrypto"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"

@@ -4,10 +4,10 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/docker/cli/cli/compose/loader"
 	"github.com/docker/cli/cli/compose/types"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
 )
 
 func IsValidStackFile(stackFileContent []byte, securitySettings *portainer.EndpointSecuritySettings) error {

@@ -8,16 +8,16 @@ import (
 	"strconv"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/agent"
+	"github.com/cloudogu/portainer-ce/api/crypto"
+	"github.com/cloudogu/portainer-ce/api/http/client"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 	"github.com/gofrs/uuid"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/agent"
-	"github.com/portainer/portainer/api/crypto"
-	"github.com/portainer/portainer/api/http/client"
-	"github.com/portainer/portainer/api/internal/edge"
-	"github.com/portainer/portainer/api/internal/endpointutils"
 )
 
 type endpointCreatePayload struct {

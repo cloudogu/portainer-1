@@ -4,14 +4,14 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/portainer/portainer/api/internal/endpointutils"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	httperrors "github.com/portainer/portainer/api/http/errors"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 type registryUpdatePayload struct {

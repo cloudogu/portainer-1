@@ -1,7 +1,7 @@
 package migrator
 
 import (
-	"github.com/portainer/portainer/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 
 	"github.com/rs/zerolog/log"
 )

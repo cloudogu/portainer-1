@@ -8,11 +8,11 @@ import (
 	"path"
 	"strings"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	libstack "github.com/portainer/docker-compose-wrapper"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy"
-	"github.com/portainer/portainer/api/http/proxy/factory"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 
 	"github.com/pkg/errors"
 )

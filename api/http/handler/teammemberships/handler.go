@@ -3,9 +3,9 @@ package teammemberships
 import (
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/http/security"
 
 	"github.com/gorilla/mux"
 )

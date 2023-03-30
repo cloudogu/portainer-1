@@ -3,8 +3,8 @@ package tests
 import (
 	"testing"
 
-	"github.com/portainer/portainer/api/dataservices/errors"
-	"github.com/portainer/portainer/api/datastore"
+	"github.com/cloudogu/portainer-ce/api/dataservices/errors"
+	"github.com/cloudogu/portainer-ce/api/datastore"
 	"github.com/stretchr/testify/assert"
 )
 

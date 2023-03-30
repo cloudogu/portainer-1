@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
 	"github.com/rs/zerolog/log"
 )

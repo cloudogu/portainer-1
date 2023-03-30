@@ -1,10 +1,10 @@
 package stackbuilders
 
 import (
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
 	httperror "github.com/portainer/libhttp/error"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/stacks/deployments"
 	"github.com/rs/zerolog/log"
 )
 

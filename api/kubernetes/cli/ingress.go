@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
-	"github.com/portainer/portainer/api/stacks/stackutils"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	"github.com/rs/zerolog/log"
 	netv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

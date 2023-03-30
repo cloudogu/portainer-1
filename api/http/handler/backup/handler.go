@@ -4,14 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/cloudogu/portainer-ce/api/adminmonitor"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/demo"
+	"github.com/cloudogu/portainer-ce/api/http/middlewares"
+	"github.com/cloudogu/portainer-ce/api/http/offlinegate"
+	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
-	"github.com/portainer/portainer/api/adminmonitor"
-	"github.com/portainer/portainer/api/dataservices"
-	"github.com/portainer/portainer/api/demo"
-	"github.com/portainer/portainer/api/http/middlewares"
-	"github.com/portainer/portainer/api/http/offlinegate"
-	"github.com/portainer/portainer/api/http/security"
 )
 
 // Handler is an http handler responsible for backup and restore portainer state

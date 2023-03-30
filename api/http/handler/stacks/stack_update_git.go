@@ -4,16 +4,16 @@ import (
 	"net/http"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
+	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
+	"github.com/cloudogu/portainer-ce/api/http/security"
+	"github.com/cloudogu/portainer-ce/api/stacks/deployments"
+	"github.com/cloudogu/portainer-ce/api/stacks/stackutils"
 	"github.com/pkg/errors"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
-	gittypes "github.com/portainer/portainer/api/git/types"
-	httperrors "github.com/portainer/portainer/api/http/errors"
-	"github.com/portainer/portainer/api/http/security"
-	"github.com/portainer/portainer/api/stacks/deployments"
-	"github.com/portainer/portainer/api/stacks/stackutils"
 )
 
 type stackGitUpdatePayload struct {

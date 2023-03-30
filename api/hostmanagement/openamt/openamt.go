@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"golang.org/x/sync/errgroup"
 )
 

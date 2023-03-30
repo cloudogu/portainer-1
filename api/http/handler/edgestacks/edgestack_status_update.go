@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
-	portainer "github.com/portainer/portainer/api"
 
 	"github.com/asaskevich/govalidator"
 	httperror "github.com/portainer/libhttp/error"

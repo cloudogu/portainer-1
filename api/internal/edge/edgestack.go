@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 )
 
 // EdgeStackRelatedEndpoints returns a list of environments(endpoints) related to this Edge stack

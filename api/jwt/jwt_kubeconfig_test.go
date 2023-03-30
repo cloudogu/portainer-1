@@ -3,10 +3,10 @@ package jwt
 import (
 	"testing"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	i "github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/golang-jwt/jwt/v4"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
-	i "github.com/portainer/portainer/api/internal/testhelpers"
 	"github.com/stretchr/testify/assert"
 )
 

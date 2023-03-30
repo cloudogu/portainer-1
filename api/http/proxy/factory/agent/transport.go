@@ -3,7 +3,7 @@ package agent
 import (
 	"net/http"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 )
 
 // Transport is an http.Transport wrapper that adds custom http headers to communicate to an Agent

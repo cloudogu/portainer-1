@@ -3,8 +3,8 @@ package endpointrelation
 import (
 	"fmt"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/edge/cache"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/edge/cache"
 
 	"github.com/rs/zerolog/log"
 )

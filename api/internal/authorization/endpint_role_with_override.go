@@ -1,6 +1,6 @@
 package authorization
 
-import portainer "github.com/portainer/portainer/api"
+import portainer "github.com/cloudogu/portainer-ce/api"
 
 // CleanNAPWithOverridePolicies Clean Namespace Access Policies with override policies
 func (service *Service) CleanNAPWithOverridePolicies(

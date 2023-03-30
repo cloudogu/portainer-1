@@ -3,8 +3,8 @@ package oauth
 import (
 	"testing"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/oauth/oauthtest"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/oauth/oauthtest"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 )

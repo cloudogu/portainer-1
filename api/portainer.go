@@ -2,13 +2,14 @@ package portainer
 
 import (
 	"context"
+	"golang.org/x/oauth2"
 	"io"
 	"time"
 
+	gittypes "github.com/cloudogu/portainer-ce/api/git/types"
+	models "github.com/cloudogu/portainer-ce/api/http/models/kubernetes"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/volume"
-	gittypes "github.com/portainer/portainer/api/git/types"
-	models "github.com/portainer/portainer/api/http/models/kubernetes"
 	v1 "k8s.io/api/core/v1"
 )
 

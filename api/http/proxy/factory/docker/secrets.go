@@ -6,9 +6,9 @@ import (
 
 	"github.com/docker/docker/client"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/http/proxy/factory/utils"
-	"github.com/portainer/portainer/api/internal/authorization"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/http/proxy/factory/utils"
+	"github.com/cloudogu/portainer-ce/api/internal/authorization"
 )
 
 const (

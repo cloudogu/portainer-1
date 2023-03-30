@@ -6,8 +6,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	portainer "github.com/portainer/portainer/api"
-	k "github.com/portainer/portainer/api/kubernetes"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	k "github.com/cloudogu/portainer-ce/api/kubernetes"
 )
 
 type StackDeployer interface {

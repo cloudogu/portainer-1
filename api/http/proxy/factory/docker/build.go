@@ -8,7 +8,7 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/portainer/portainer/api/archive"
+	"github.com/cloudogu/portainer-ce/api/archive"
 
 	"github.com/rs/zerolog/log"
 )

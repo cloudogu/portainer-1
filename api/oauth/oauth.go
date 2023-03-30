@@ -3,15 +3,17 @@ package oauth
 import (
 	"context"
 	"encoding/json"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/mitchellh/mapstructure"
 	"io"
 	"mime"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
-	portainer "github.com/portainer/portainer/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"

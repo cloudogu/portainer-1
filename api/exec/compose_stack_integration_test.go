@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/testhelpers"
 	"github.com/portainer/docker-compose-wrapper/compose"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/internal/testhelpers"
 
 	"github.com/rs/zerolog/log"
 )

@@ -5,8 +5,8 @@ import (
 	"net"
 	"net/url"
 
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/crypto"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/crypto"
 )
 
 func initDial(endpoint *portainer.Endpoint) (net.Conn, error) {

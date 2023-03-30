@@ -2,16 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"github.com/patrickmn/go-cache"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
-	portainer "github.com/portainer/portainer/api"
-	"github.com/portainer/portainer/api/dataservices"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
