@@ -1,6 +1,5 @@
 import { useQuery } from 'react-query';
 
-import { error as notifyError } from '@/portainer/services/notifications';
 import { useNodesCount } from '@/react/portainer/system/useNodesCount';
 
 import { getLicenseInfo } from './license.service';
@@ -11,8 +10,8 @@ export function useLicenseInfo() {
     'licenseInfo',
     () => getLicenseInfo(),
     {
-      onError(error) {
-        notifyError('Failure', error as Error, 'Failed to get license info');
+      onError() {
+        // ignore license notifications
       },
     }
   );

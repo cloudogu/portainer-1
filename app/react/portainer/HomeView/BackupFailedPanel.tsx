@@ -1,6 +1,5 @@
 import { useQuery } from 'react-query';
 
-import { error as notifyError } from '@/portainer/services/notifications';
 import { getBackupStatus } from '@/portainer/services/api/backup.service';
 import { isoDate } from '@/portainer/filters/filters';
 
@@ -32,8 +31,8 @@ function useBackupStatus() {
     ['backup', 'status'],
     () => getBackupStatus(),
     {
-      onError(error) {
-        notifyError('Failure', error as Error, 'Failed to get license info');
+      onError() {
+        // ignore license notifications
       },
     }
   );
