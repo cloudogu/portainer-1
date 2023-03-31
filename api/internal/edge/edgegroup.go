@@ -1,11 +1,13 @@
 package edge
 
 import (
-	"github.com/cloudogu/portainer-ce/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/internal/endpointutils"
 	"github.com/cloudogu/portainer-ce/api/internal/tag"
 )
 
-// EdgeGroupRelatedEndpoints returns a list of endpoints related to this Edge group
+// EdgeGroupRelatedEndpoints returns a list of environments(endpoints) related to this Edge group
 func EdgeGroupRelatedEndpoints(edgeGroup *portainer.EdgeGroup, endpoints []portainer.Endpoint, endpointGroups []portainer.EndpointGroup) []portainer.EndpointID {
 	if !edgeGroup.Dynamic {
 		return edgeGroup.Endpoints
@@ -13,7 +15,7 @@ func EdgeGroupRelatedEndpoints(edgeGroup *portainer.EdgeGroup, endpoints []porta
 
 	endpointIDs := []portainer.EndpointID{}
 	for _, endpoint := range endpoints {
-		if endpoint.Type != portainer.EdgeAgentOnDockerEnvironment && endpoint.Type != portainer.EdgeAgentOnKubernetesEnvironment {
+		if !endpointutils.IsEdgeEndpoint(&endpoint) {
 			continue
 		}
 
@@ -33,7 +35,41 @@ func EdgeGroupRelatedEndpoints(edgeGroup *portainer.EdgeGroup, endpoints []porta
 	return endpointIDs
 }
 
-// edgeGroupRelatedToEndpoint returns true is edgeGroup is associated with endpoint
+func EdgeGroupSet(edgeGroupIDs []portainer.EdgeGroupID) map[portainer.EdgeGroupID]bool {
+	set := map[portainer.EdgeGroupID]bool{}
+
+	for _, edgeGroupID := range edgeGroupIDs {
+		set[edgeGroupID] = true
+	}
+
+	return set
+}
+
+func GetEndpointsFromEdgeGroups(edgeGroupIDs []portainer.EdgeGroupID, datastore dataservices.DataStore) ([]portainer.EndpointID, error) {
+	endpoints, err := datastore.Endpoint().Endpoints()
+	if err != nil {
+		return nil, err
+	}
+
+	endpointGroups, err := datastore.EndpointGroup().EndpointGroups()
+	if err != nil {
+		return nil, err
+	}
+
+	var response []portainer.EndpointID
+	for _, edgeGroupID := range edgeGroupIDs {
+		edgeGroup, err := datastore.EdgeGroup().EdgeGroup(edgeGroupID)
+		if err != nil {
+			return nil, err
+		}
+
+		response = append(response, EdgeGroupRelatedEndpoints(edgeGroup, endpoints, endpointGroups)...)
+	}
+
+	return response, nil
+}
+
+// edgeGroupRelatedToEndpoint returns true is edgeGroup is associated with environment(endpoint)
 func edgeGroupRelatedToEndpoint(edgeGroup *portainer.EdgeGroup, endpoint *portainer.Endpoint, endpointGroup *portainer.EndpointGroup) bool {
 	if !edgeGroup.Dynamic {
 		for _, endpointID := range edgeGroup.Endpoints {

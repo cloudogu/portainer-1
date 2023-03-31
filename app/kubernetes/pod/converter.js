@@ -9,8 +9,8 @@ import {
   KubernetesPortainerApplicationNote,
 } from 'Kubernetes/models/application/models';
 
+import { KubernetesPod, KubernetesPodToleration, KubernetesPodAffinity, KubernetesPodContainer, KubernetesPodContainerTypes, KubernetesPodEviction } from 'Kubernetes/pod/models';
 import { createPayloadFactory } from './payloads/create';
-import { KubernetesPod, KubernetesPodToleration, KubernetesPodAffinity, KubernetesPodContainer, KubernetesPodContainerTypes } from './models';
 
 function computeStatus(statuses) {
   const containerStatuses = _.map(statuses, 'state');
@@ -68,8 +68,10 @@ function computeContainers(data) {
       const res = new KubernetesPodContainer();
       res.Type = KubernetesPodContainerTypes.APP;
       res.PodName = data.metadata.name;
+      res.PodIP = data.status.podIP;
       res.Name = item.name;
       res.Image = item.image;
+      res.ImagePullPolicy = item.imagePullPolicy;
       res.Node = data.spec.nodeName;
       res.CreationDate = data.status.startTime;
       res.Status = computeContainerStatus(data.status.containerStatuses, item.name);
@@ -113,6 +115,13 @@ export default class KubernetesPodConverter {
     res.Affinity = computeAffinity(data.spec.affinity);
     res.NodeSelector = data.spec.nodeSelector;
     res.Tolerations = computeTolerations(data.spec.tolerations);
+    return res;
+  }
+
+  static evictionPayload(pod) {
+    const res = new KubernetesPodEviction();
+    res.metadata.name = pod.Name;
+    res.metadata.namespace = pod.Namespace;
     return res;
   }
 

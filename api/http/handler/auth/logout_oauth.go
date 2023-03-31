@@ -2,10 +2,10 @@ package auth
 
 import (
 	"fmt"
-	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	portError "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
-	"io/ioutil"
+	"io"
 	"mime"
 	"net/http"
 	"net/url"
@@ -18,7 +18,7 @@ type verifyResponse struct {
 
 func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Request) *portError.HandlerError {
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return &portError.HandlerError{http.StatusInternalServerError, "Unable to block token: ", err}
 	}
@@ -33,15 +33,13 @@ func (handler *Handler) invalidateOAuthSession(w http.ResponseWriter, r *http.Re
 		if err != nil {
 			return &portError.HandlerError{http.StatusInternalServerError, "Cannot parse body ", err}
 		}
-
 		token := values.Get("logoutRequest")
 
-		jwtBlocklist, ok := handler.JWTService.(portainer.BlocklistJWTService)
+		jwtBlocklist, ok := handler.JWTService.(dataservices.BlocklistedJWTService)
+		fmt.Printf("###### token: %s and service could be casted: %t", token, ok)
 		if ok {
 			jwtBlocklist.AddTokenToBlocklist(token)
 		}
-
-		w.WriteHeader(200)
 		return nil
 	} else {
 		return &portError.HandlerError{

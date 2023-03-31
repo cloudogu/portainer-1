@@ -1,4 +1,4 @@
-import { ResourceControlViewModel } from 'Portainer/models/resourceControl/resourceControl';
+import { ResourceControlViewModel } from '@/react/portainer/access-control/models/ResourceControlViewModel';
 
 export function VolumeViewModel(data) {
   this.Id = data.Name;
@@ -12,6 +12,8 @@ export function VolumeViewModel(data) {
     this.StackName = this.Labels['com.docker.stack.namespace'];
   }
   this.Mountpoint = data.Mountpoint;
+
+  this.ResourceId = data.ResourceID;
 
   if (data.Portainer) {
     if (data.Portainer.ResourceControl) {

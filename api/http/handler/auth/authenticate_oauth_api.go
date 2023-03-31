@@ -3,14 +3,15 @@ package auth
 import (
 	"errors"
 	"github.com/portainer/libhttp/request"
-	"io/ioutil"
+	"golang.org/x/oauth2"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/cloudogu/portainer-ce/api"
-	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
 	httperror "github.com/portainer/libhttp/error"
 )
 
@@ -25,10 +26,10 @@ type authenticateApiResponse struct {
 
 func (payload *authenticateApiPayload) Validate(r *http.Request) error {
 	if govalidator.IsNull(payload.Username) {
-		return errors.New("Invalid username")
+		return errors.New("invalid username")
 	}
 	if govalidator.IsNull(payload.Password) {
-		return errors.New("Invalid password")
+		return errors.New("invalid password")
 	}
 	return nil
 }
@@ -46,7 +47,7 @@ func (handler *Handler) authenticateViaApi(w http.ResponseWriter, r *http.Reques
 	}
 
 	user, err := handler.DataStore.User().UserByUsername(payload.Username)
-	if err != nil && err != bolterrors.ErrObjectNotFound {
+	if err != nil && !handler.DataStore.IsErrObjectNotFound(err) {
 		return &httperror.HandlerError{StatusCode: http.StatusInternalServerError, Message: "Unable to retrieve a user with the specified username from the database", Err: err}
 	}
 
@@ -58,6 +59,7 @@ func (handler *Handler) authenticateViaApi(w http.ResponseWriter, r *http.Reques
 	u, _ := url.ParseRequestURI(settings.OAuthSettings.LogoutURI)
 	u.Path = "/cas/v1/tickets"
 	urlStr := u.String()
+	log.Print("TicketURL: " + urlStr)
 
 	client := &http.Client{}
 	data := url.Values{}
@@ -90,7 +92,7 @@ func (handler *Handler) authenticateViaApi(w http.ResponseWriter, r *http.Reques
 	}
 
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(stResponse.Body)
+	body, err := io.ReadAll(stResponse.Body)
 	if err != nil {
 		return &httperror.HandlerError{StatusCode: http.StatusInternalServerError, Message: "Unable to block token: ", Err: err}
 	}
@@ -99,7 +101,7 @@ func (handler *Handler) authenticateViaApi(w http.ResponseWriter, r *http.Reques
 		return &httperror.HandlerError{StatusCode: http.StatusInternalServerError, Message: "Invalid service ticket returned: ", Err: err}
 	}
 
-	user.OAuthToken = string(body)
+	user.OAuthToken = &oauth2.Token{AccessToken: string(body)}
 
-	return handler.writeToken(w, user)
+	return handler.writeToken(w, user, false)
 }

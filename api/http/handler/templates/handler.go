@@ -3,7 +3,8 @@ package templates
 import (
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
@@ -12,7 +13,7 @@ import (
 // Handler represents an HTTP API handler for managing templates.
 type Handler struct {
 	*mux.Router
-	DataStore   portainer.DataStore
+	DataStore   dataservices.DataStore
 	GitService  portainer.GitService
 	FileService portainer.FileService
 }

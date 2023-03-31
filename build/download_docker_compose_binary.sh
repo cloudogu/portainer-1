@@ -1,18 +1,30 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 3 ]]; then
+    echo "Illegal number of parameters" >&2
+    exit 1
+fi
 
 PLATFORM=$1
 ARCH=$2
-DOCKER_COMPOSE_VERSION=$3
+COMPOSE_VERSION=$3
 
-if [ "${PLATFORM}" == 'linux' ] && [ "${ARCH}" == 'amd64' ]; then
-  wget -q -O "dist/docker-compose" "https://github.com/portainer/docker-compose-linux-amd64-static-binary/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose"
-  chmod +x "dist/docker-compose"
-elif [ "${PLATFORM}" == 'mac' ]; then
-  wget -q -O "dist/docker-compose" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Darwin-x86_64"
-  chmod +x "dist/docker-compose"
-elif [ "${PLATFORM}" == 'win' ]; then
-  wget -q -O "dist/docker-compose.exe" "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Windows-x86_64.exe"
-  chmod +x "dist/docker-compose.exe"
+
+if [[ ${ARCH} == "amd64" ]]; then
+    ARCH="x86_64"
+elif [[ ${ARCH} == "arm" ]]; then
+    ARCH="armv7"
+elif [[ ${ARCH} == "arm64" ]]; then
+    ARCH="aarch64"
 fi
 
-exit 0
+
+if [[ "$PLATFORM" == "windows" ]]; then
+    wget -q -O "dist/docker-compose.exe" "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-windows-${ARCH}.exe"
+    chmod +x "dist/docker-compose.exe"
+else
+    wget -q -O "dist/docker-compose" "https://github.com/docker/compose/releases/download/$COMPOSE_VERSION/docker-compose-${PLATFORM}-${ARCH}"
+    chmod +x "dist/docker-compose"
+fi
+

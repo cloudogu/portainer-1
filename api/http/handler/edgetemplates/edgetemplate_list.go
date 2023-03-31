@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	"github.com/cloudogu/portainer-ce/api/http/client"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/response"
@@ -15,11 +15,21 @@ type templateFileFormat struct {
 	Templates []portainer.Template `json:"templates"`
 }
 
-// GET request on /api/edgetemplates
+// @id EdgeTemplateList
+// @summary Fetches the list of Edge Templates
+// @description **Access policy**: administrator
+// @tags edge_templates
+// @security ApiKeyAuth
+// @security jwt
+// @accept json
+// @produce json
+// @success 200 {array} portainer.Template
+// @failure 500
+// @router /edge_templates [get]
 func (handler *Handler) edgeTemplateList(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	settings, err := handler.DataStore.Settings().Settings()
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve settings from the database", err}
+		return httperror.InternalServerError("Unable to retrieve settings from the database", err)
 	}
 
 	url := portainer.DefaultTemplatesURL
@@ -30,14 +40,14 @@ func (handler *Handler) edgeTemplateList(w http.ResponseWriter, r *http.Request)
 	var templateData []byte
 	templateData, err = client.Get(url, 10)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve external templates", err}
+		return httperror.InternalServerError("Unable to retrieve external templates", err)
 	}
 
 	var templateFile templateFileFormat
 
 	err = json.Unmarshal(templateData, &templateFile)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to parse template file", err}
+		return httperror.InternalServerError("Unable to parse template file", err)
 	}
 
 	filteredTemplates := make([]portainer.Template, 0)

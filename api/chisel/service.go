@@ -1,16 +1,19 @@
 package chisel
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"strconv"
+	"net/http"
+	"sync"
 	"time"
 
-	"github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/bolt/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/http/proxy"
+
 	"github.com/dchest/uniuri"
 	chserver "github.com/jpillora/chisel/server"
-	cmap "github.com/orcaman/concurrent-map"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -25,18 +28,82 @@ const (
 type Service struct {
 	serverFingerprint string
 	serverPort        string
-	tunnelDetailsMap  cmap.ConcurrentMap
-	dataStore         portainer.DataStore
+	tunnelDetailsMap  map[portainer.EndpointID]*portainer.TunnelDetails
+	dataStore         dataservices.DataStore
 	snapshotService   portainer.SnapshotService
 	chiselServer      *chserver.Server
+	shutdownCtx       context.Context
+	ProxyManager      *proxy.Manager
+	mu                sync.Mutex
 }
 
 // NewService returns a pointer to a new instance of Service
-func NewService(dataStore portainer.DataStore) *Service {
+func NewService(dataStore dataservices.DataStore, shutdownCtx context.Context) *Service {
 	return &Service{
-		tunnelDetailsMap: cmap.New(),
+		tunnelDetailsMap: make(map[portainer.EndpointID]*portainer.TunnelDetails),
 		dataStore:        dataStore,
+		shutdownCtx:      shutdownCtx,
 	}
+}
+
+// pingAgent ping the given agent so that the agent can keep the tunnel alive
+func (service *Service) pingAgent(endpointID portainer.EndpointID) error {
+	tunnel := service.GetTunnelDetails(endpointID)
+	requestURL := fmt.Sprintf("http://127.0.0.1:%d/ping", tunnel.Port)
+	req, err := http.NewRequest(http.MethodHead, requestURL, nil)
+	if err != nil {
+		return err
+	}
+
+	httpClient := &http.Client{
+		Timeout: 3 * time.Second,
+	}
+	_, err = httpClient.Do(req)
+	return err
+}
+
+// KeepTunnelAlive keeps the tunnel of the given environment for maxAlive duration, or until ctx is done
+func (service *Service) KeepTunnelAlive(endpointID portainer.EndpointID, ctx context.Context, maxAlive time.Duration) {
+	go func() {
+		log.Debug().
+			Int("endpoint_id", int(endpointID)).
+			Float64("max_alive_minutes", maxAlive.Minutes()).
+			Msg("start")
+
+		maxAliveTicker := time.NewTicker(maxAlive)
+		defer maxAliveTicker.Stop()
+		pingTicker := time.NewTicker(tunnelCleanupInterval)
+		defer pingTicker.Stop()
+
+		for {
+			select {
+			case <-pingTicker.C:
+				service.SetTunnelStatusToActive(endpointID)
+				err := service.pingAgent(endpointID)
+				if err != nil {
+					log.Debug().
+						Int("endpoint_id", int(endpointID)).
+						Err(err).
+						Msg("ping agent")
+				}
+			case <-maxAliveTicker.C:
+				log.Debug().
+					Int("endpoint_id", int(endpointID)).
+					Float64("timeout_minutes", maxAlive.Minutes()).
+					Msg("tunnel keep alive timeout")
+
+				return
+			case <-ctx.Done():
+				err := ctx.Err()
+				log.Debug().
+					Int("endpoint_id", int(endpointID)).
+					Err(err).
+					Msg("tunnel stop")
+
+				return
+			}
+		}
+	}()
 }
 
 // StartTunnelServer starts a tunnel server on the specified addr and port.
@@ -83,11 +150,16 @@ func (service *Service) StartTunnelServer(addr, port string, snapshotService por
 	return nil
 }
 
+// StopTunnelServer stops tunnel http server
+func (service *Service) StopTunnelServer() error {
+	return service.chiselServer.Close()
+}
+
 func (service *Service) retrievePrivateKeySeed() (string, error) {
 	var serverInfo *portainer.TunnelServerInfo
 
 	serverInfo, err := service.dataStore.TunnelServer().Info()
-	if err == errors.ErrObjectNotFound {
+	if service.dataStore.IsErrObjectNotFound(err) {
 		keySeed := uniuri.NewLen(16)
 
 		serverInfo = &portainer.TunnelServerInfo{
@@ -106,15 +178,23 @@ func (service *Service) retrievePrivateKeySeed() (string, error) {
 }
 
 func (service *Service) startTunnelVerificationLoop() {
-	log.Printf("[DEBUG] [chisel, monitoring] [check_interval_seconds: %f] [message: starting tunnel management process]", tunnelCleanupInterval.Seconds())
+	log.Debug().
+		Float64("check_interval_seconds", tunnelCleanupInterval.Seconds()).
+		Msg("starting tunnel management process")
+
 	ticker := time.NewTicker(tunnelCleanupInterval)
-	stopSignal := make(chan struct{})
 
 	for {
 		select {
 		case <-ticker.C:
 			service.checkTunnels()
-		case <-stopSignal:
+		case <-service.shutdownCtx.Done():
+			log.Debug().Msg("shutting down tunnel service")
+
+			if err := service.StopTunnelServer(); err != nil {
+				log.Debug().Err(err).Msg("stopped tunnel service")
+			}
+
 			ticker.Stop()
 			return
 		}
@@ -122,50 +202,61 @@ func (service *Service) startTunnelVerificationLoop() {
 }
 
 func (service *Service) checkTunnels() {
-	for item := range service.tunnelDetailsMap.IterBuffered() {
-		tunnel := item.Val.(*portainer.TunnelDetails)
+	tunnels := make(map[portainer.EndpointID]portainer.TunnelDetails)
 
+	service.mu.Lock()
+	for key, tunnel := range service.tunnelDetailsMap {
 		if tunnel.LastActivity.IsZero() || tunnel.Status == portainer.EdgeAgentIdle {
 			continue
 		}
 
+		if tunnel.Status == portainer.EdgeAgentManagementRequired && time.Since(tunnel.LastActivity) < requiredTimeout {
+			continue
+		}
+
+		if tunnel.Status == portainer.EdgeAgentActive && time.Since(tunnel.LastActivity) < activeTimeout {
+			continue
+		}
+
+		tunnels[key] = *tunnel
+	}
+	service.mu.Unlock()
+
+	for endpointID, tunnel := range tunnels {
 		elapsed := time.Since(tunnel.LastActivity)
-		log.Printf("[DEBUG] [chisel,monitoring] [endpoint_id: %s] [status: %s] [status_time_seconds: %f] [message: endpoint tunnel monitoring]", item.Key, tunnel.Status, elapsed.Seconds())
+		log.Debug().
+			Int("endpoint_id", int(endpointID)).
+			Str("status", tunnel.Status).
+			Float64("status_time_seconds", elapsed.Seconds()).
+			Msg("environment tunnel monitoring")
 
-		if tunnel.Status == portainer.EdgeAgentManagementRequired && elapsed.Seconds() < requiredTimeout.Seconds() {
-			continue
-		} else if tunnel.Status == portainer.EdgeAgentManagementRequired && elapsed.Seconds() > requiredTimeout.Seconds() {
-			log.Printf("[DEBUG] [chisel,monitoring] [endpoint_id: %s] [status: %s] [status_time_seconds: %f] [timeout_seconds: %f] [message: REQUIRED state timeout exceeded]", item.Key, tunnel.Status, elapsed.Seconds(), requiredTimeout.Seconds())
+		if tunnel.Status == portainer.EdgeAgentManagementRequired && elapsed > requiredTimeout {
+			log.Debug().
+				Int("endpoint_id", int(endpointID)).
+				Str("status", tunnel.Status).
+				Float64("status_time_seconds", elapsed.Seconds()).
+				Float64("timeout_seconds", requiredTimeout.Seconds()).
+				Msg("REQUIRED state timeout exceeded")
 		}
 
-		if tunnel.Status == portainer.EdgeAgentActive && elapsed.Seconds() < activeTimeout.Seconds() {
-			continue
-		} else if tunnel.Status == portainer.EdgeAgentActive && elapsed.Seconds() > activeTimeout.Seconds() {
-			log.Printf("[DEBUG] [chisel,monitoring] [endpoint_id: %s] [status: %s] [status_time_seconds: %f] [timeout_seconds: %f] [message: ACTIVE state timeout exceeded]", item.Key, tunnel.Status, elapsed.Seconds(), activeTimeout.Seconds())
+		if tunnel.Status == portainer.EdgeAgentActive && elapsed > activeTimeout {
+			log.Debug().
+				Int("endpoint_id", int(endpointID)).
+				Str("status", tunnel.Status).
+				Float64("status_time_seconds", elapsed.Seconds()).
+				Float64("timeout_seconds", activeTimeout.Seconds()).
+				Msg("ACTIVE state timeout exceeded")
 
-			endpointID, err := strconv.Atoi(item.Key)
+			err := service.snapshotEnvironment(endpointID, tunnel.Port)
 			if err != nil {
-				log.Printf("[ERROR] [chisel,snapshot,conversion] Invalid endpoint identifier (id: %s): %s", item.Key, err)
-			}
-
-			err = service.snapshotEnvironment(portainer.EndpointID(endpointID), tunnel.Port)
-			if err != nil {
-				log.Printf("[ERROR] [snapshot] Unable to snapshot Edge endpoint (id: %s): %s", item.Key, err)
+				log.Error().
+					Int("endpoint_id", int(endpointID)).
+					Err(err).
+					Msg("unable to snapshot Edge environment")
 			}
 		}
 
-		if len(tunnel.Jobs) > 0 {
-			endpointID, err := strconv.Atoi(item.Key)
-			if err != nil {
-				log.Printf("[ERROR] [chisel,conversion] Invalid endpoint identifier (id: %s): %s", item.Key, err)
-				continue
-			}
-
-			service.SetTunnelStatusToIdle(portainer.EndpointID(endpointID))
-		} else {
-			service.tunnelDetailsMap.Remove(item.Key)
-		}
-
+		service.SetTunnelStatusToIdle(portainer.EndpointID(endpointID))
 	}
 }
 

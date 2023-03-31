@@ -16,7 +16,7 @@ type BlocklistTokenMap struct {
 	ttl       int64
 }
 
-// New Creates a new blocklist for invalid tokens. The timeout for the element is given as time.Duration
+// NewBlocklistTokenMap Creates a new blocklist for invalid tokens. The timeout for the element is given as integer
 func NewBlocklistTokenMap(maxTimeToLive int, interval time.Duration) (m *BlocklistTokenMap) {
 	m = &BlocklistTokenMap{
 		blocklist: make(map[string]*blocklistToken),
@@ -49,7 +49,7 @@ func (m *BlocklistTokenMap) UpdateList() {
 	}
 }
 
-// Puts an element into the blocklist
+// Put puts an element into the blocklist
 func (m *BlocklistTokenMap) Put(token string) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -60,7 +60,7 @@ func (m *BlocklistTokenMap) Put(token string) {
 	m.blocklist[token] = it
 }
 
-// IsBlocked checks whether a certain token is blocked. When the requested token is expired it does not count as blocked.
+// IsBlocked checks whether the blocklist contains a certain token. When the requested token is expired it does not count as blocked.
 func (m *BlocklistTokenMap) IsBlocked(token string) bool {
 	mapToken, ok := m.blocklist[token]
 	if !ok {
@@ -70,8 +70,8 @@ func (m *BlocklistTokenMap) IsBlocked(token string) bool {
 }
 
 // IsExpired returns true when the token is expired
-func (m *BlocklistTokenMap) IsExpired(token *blocklistToken) bool {
-	return time.Now().Unix()-token.creationTime > m.ttl
+func (m *BlocklistTokenMap) IsExpired(mapToken *blocklistToken) bool {
+	return time.Now().Unix()-mapToken.creationTime > m.ttl
 }
 
 // Remove removes a specific token from the map

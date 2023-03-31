@@ -4,17 +4,22 @@ import { PorImageRegistryModel } from 'Docker/models/porImageRegistry';
 angular.module('portainer.docker').controller('ImagesController', [
   '$scope',
   '$state',
+  'Authentication',
   'ImageService',
   'Notifications',
   'ModalService',
   'HttpRequestHelper',
   'FileSaver',
   'Blob',
-  'EndpointProvider',
-  function ($scope, $state, ImageService, Notifications, ModalService, HttpRequestHelper, FileSaver, Blob, EndpointProvider) {
+  'endpoint',
+  function ($scope, $state, Authentication, ImageService, Notifications, ModalService, HttpRequestHelper, FileSaver, Blob, endpoint) {
+    $scope.endpoint = endpoint;
+    $scope.isAdmin = Authentication.isAdmin();
+
     $scope.state = {
       actionInProgress: false,
       exportInProgress: false,
+      pullRateValid: false,
     };
 
     $scope.formValues = {
@@ -30,7 +35,11 @@ angular.module('portainer.docker').controller('ImagesController', [
 
       $scope.state.actionInProgress = true;
       ImageService.pullImage(registryModel, false)
-        .then(function success() {
+        .then(function success(data) {
+          var err = data[data.length - 1].errorDetail;
+          if (err) {
+            return Notifications.error('Failure', err, 'Unable to pull image');
+          }
           Notifications.success('Image successfully pulled', registryModel.Image);
           $state.reload();
         })
@@ -80,7 +89,7 @@ angular.module('portainer.docker').controller('ImagesController', [
         .then(function success(data) {
           var downloadData = new Blob([data.file], { type: 'application/x-tar' });
           FileSaver.saveAs(downloadData, 'images.tar');
-          Notifications.success('Image(s) successfully downloaded');
+          Notifications.success('Success', 'Image(s) successfully downloaded');
         })
         .catch(function error(err) {
           Notifications.error('Failure', err, 'Unable to download image(s)');
@@ -125,19 +134,21 @@ angular.module('portainer.docker').controller('ImagesController', [
       });
     };
 
-    $scope.offlineMode = false;
-
     $scope.getImages = getImages;
     function getImages() {
       ImageService.images(true)
         .then(function success(data) {
           $scope.images = data;
-          $scope.offlineMode = EndpointProvider.offlineMode();
         })
         .catch(function error(err) {
           Notifications.error('Failure', err, 'Unable to retrieve images');
           $scope.images = [];
         });
+    }
+
+    $scope.setPullImageValidity = setPullImageValidity;
+    function setPullImageValidity(validity) {
+      $scope.state.pullRateValid = validity;
     }
 
     function initView() {

@@ -1,16 +1,21 @@
 import angular from 'angular';
+import _ from 'lodash-es';
+
 import { KubernetesConfigurationFormValues } from 'Kubernetes/models/configuration/formvalues';
-import { KubernetesConfigurationTypes } from 'Kubernetes/models/configuration/models';
+import { KubernetesConfigurationKinds, KubernetesSecretTypeOptions } from 'Kubernetes/models/configuration/models';
 import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
 import KubernetesConfigurationConverter from 'Kubernetes/converters/configuration';
 import KubernetesEventHelper from 'Kubernetes/helpers/eventHelper';
-import _ from 'lodash-es';
+import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
+
+import { isConfigurationFormValid } from '../validation';
 
 class KubernetesConfigurationController {
   /* @ngInject */
   constructor(
     $async,
     $state,
+    $window,
     clipboard,
     Notifications,
     LocalStorage,
@@ -20,11 +25,11 @@ class KubernetesConfigurationController {
     KubernetesResourcePoolService,
     ModalService,
     KubernetesApplicationService,
-    KubernetesEventService,
-    KubernetesNamespaceHelper
+    KubernetesEventService
   ) {
     this.$async = $async;
     this.$state = $state;
+    this.$window = $window;
     this.clipboard = clipboard;
     this.Notifications = Notifications;
     this.LocalStorage = LocalStorage;
@@ -33,8 +38,8 @@ class KubernetesConfigurationController {
     this.KubernetesResourcePoolService = KubernetesResourcePoolService;
     this.KubernetesApplicationService = KubernetesApplicationService;
     this.KubernetesEventService = KubernetesEventService;
-    this.KubernetesConfigurationTypes = KubernetesConfigurationTypes;
-    this.KubernetesNamespaceHelper = KubernetesNamespaceHelper;
+    this.KubernetesConfigurationKinds = KubernetesConfigurationKinds;
+    this.KubernetesSecretTypeOptions = KubernetesSecretTypeOptions;
     this.KubernetesConfigMapService = KubernetesConfigMapService;
     this.KubernetesSecretService = KubernetesSecretService;
 
@@ -50,7 +55,11 @@ class KubernetesConfigurationController {
   }
 
   isSystemNamespace() {
-    return this.KubernetesNamespaceHelper.isSystemNamespace(this.configuration.Namespace);
+    return KubernetesNamespaceHelper.isSystemNamespace(this.configuration.Namespace);
+  }
+
+  isSystemConfig() {
+    return this.isSystemNamespace() || this.configuration.IsRegistrySecret;
   }
 
   selectTab(index) {
@@ -70,10 +79,9 @@ class KubernetesConfigurationController {
   }
 
   isFormValid() {
-    if (this.formValues.IsSimple) {
-      return this.formValues.Data.length > 0 && this.state.isDataValid;
-    }
-    return this.state.isDataValid;
+    const [isValid, warningMessage] = isConfigurationFormValid(this.state.alreadyExist, this.state.isDataValid, this.formValues);
+    this.state.secretWarningMessage = warningMessage;
+    return isValid;
   }
 
   // TODO: refactor
@@ -83,13 +91,13 @@ class KubernetesConfigurationController {
     try {
       this.state.actionInProgress = true;
       if (
-        this.formValues.Type !== this.configuration.Type ||
+        this.formValues.Kind !== this.configuration.Kind ||
         this.formValues.ResourcePool.Namespace.Name !== this.configuration.Namespace ||
         this.formValues.Name !== this.configuration.Name
       ) {
         await this.KubernetesConfigurationService.create(this.formValues);
         await this.KubernetesConfigurationService.delete(this.configuration);
-        this.Notifications.success('Configuration succesfully updated');
+        this.Notifications.success('Success', 'Configuration succesfully updated');
         this.$state.go(
           'kubernetes.configurations.configuration',
           {
@@ -100,8 +108,8 @@ class KubernetesConfigurationController {
         );
       } else {
         await this.KubernetesConfigurationService.update(this.formValues, this.configuration);
-        this.Notifications.success('Configuration succesfully updated');
-        this.$state.reload();
+        this.Notifications.success('Success', 'Configuration succesfully updated');
+        this.$state.reload(this.$state.current);
       }
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to update configuration');
@@ -132,9 +140,14 @@ class KubernetesConfigurationController {
       const name = this.$transition$.params().name;
       const namespace = this.$transition$.params().namespace;
       const [configMap, secret] = await Promise.allSettled([this.KubernetesConfigMapService.get(namespace, name), this.KubernetesSecretService.get(namespace, name)]);
+      if (secret.status === 'rejected' && secret.reason.err.status === 403) {
+        this.$state.go('kubernetes.configurations');
+        throw new Error('Not authorized to edit secret');
+      }
       if (secret.status === 'fulfilled') {
         this.configuration = KubernetesConfigurationConverter.secretToConfiguration(secret.value);
         this.formValues.Data = secret.value.Data;
+        // this.formValues.ServiceAccountName = secret.value.ServiceAccountName;
       } else {
         this.configuration = KubernetesConfigurationConverter.configMapToConfiguration(configMap.value);
         this.formValues.Data = configMap.value.Data;
@@ -143,6 +156,10 @@ class KubernetesConfigurationController {
       this.formValues.Id = this.configuration.Id;
       this.formValues.Name = this.configuration.Name;
       this.formValues.Type = this.configuration.Type;
+      this.formValues.Kind = this.configuration.Kind;
+      this.oldDataYaml = this.formValues.DataYaml;
+
+      return this.configuration;
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to retrieve configuration');
     } finally {
@@ -204,6 +221,29 @@ class KubernetesConfigurationController {
     return this.$async(this.getConfigurationsAsync);
   }
 
+  tagUsedDataKeys() {
+    const configName = this.$transition$.params().name;
+    const usedDataKeys = _.uniq(
+      this.configuration.Applications.flatMap((app) =>
+        app.Env.filter((e) => e.valueFrom && e.valueFrom.configMapKeyRef && e.valueFrom.configMapKeyRef.name === configName).map((e) => e.name)
+      )
+    );
+
+    this.formValues.Data = this.formValues.Data.map((variable) => {
+      if (!usedDataKeys.includes(variable.Key)) {
+        return variable;
+      }
+
+      return { ...variable, Used: true };
+    });
+  }
+
+  async uiCanExit() {
+    if (!this.formValues.IsSimple && this.formValues.DataYaml !== this.oldDataYaml && this.state.isEditorDirty) {
+      return this.ModalService.confirmWebEditorDiscard();
+    }
+  }
+
   async onInit() {
     try {
       this.state = {
@@ -217,6 +257,9 @@ class KubernetesConfigurationController {
         activeTab: 0,
         currentName: this.$state.$current.name,
         isDataValid: true,
+        isEditorDirty: false,
+        isDockerConfig: false,
+        secretWarningMessage: '',
       };
 
       this.state.activeTab = this.LocalStorage.getActiveTab('configuration');
@@ -224,15 +267,45 @@ class KubernetesConfigurationController {
       this.formValues = new KubernetesConfigurationFormValues();
 
       this.resourcePools = await this.KubernetesResourcePoolService.get();
-      await this.getConfiguration();
-      await this.getApplications(this.configuration.Namespace);
-      await this.getEvents(this.configuration.Namespace);
-      await this.getConfigurations();
+      const configuration = await this.getConfiguration();
+      if (configuration) {
+        await this.getApplications(this.configuration.Namespace);
+        await this.getEvents(this.configuration.Namespace);
+        await this.getConfigurations();
+      }
+
+      // after loading the configuration, check if it is a docker config secret type
+      if (
+        this.formValues.Kind === this.KubernetesConfigurationKinds.SECRET &&
+        (this.formValues.Type === this.KubernetesSecretTypeOptions.DOCKERCONFIGJSON.value || this.formValues.Type === this.KubernetesSecretTypeOptions.DOCKERCFG.value)
+      ) {
+        this.state.isDockerConfig = true;
+      }
+      // convert the secret type to a human readable value
+      if (this.formValues.Type) {
+        const secretTypeValues = Object.values(this.KubernetesSecretTypeOptions);
+        const secretType = secretTypeValues.find((secretType) => secretType.value === this.formValues.Type);
+        this.secretTypeName = secretType ? secretType.name : this.formValues.Type;
+      } else {
+        this.secretTypeName = '';
+      }
+
+      if (this.formValues.Type === this.KubernetesSecretTypeOptions.SERVICEACCOUNTTOKEN.value) {
+        this.formValues.ServiceAccountName = configuration.ServiceAccountName;
+      }
+
+      this.tagUsedDataKeys();
     } catch (err) {
       this.Notifications.error('Failure', err, 'Unable to load view data');
     } finally {
       this.state.viewReady = true;
     }
+
+    this.$window.onbeforeunload = () => {
+      if (!this.formValues.IsSimple && this.formValues.DataYaml !== this.oldDataYaml && this.state.isEditorDirty) {
+        return '';
+      }
+    };
   }
 
   $onInit() {
@@ -243,6 +316,7 @@ class KubernetesConfigurationController {
     if (this.state.currentName !== this.$state.$current.name) {
       this.LocalStorage.storeActiveTab('configuration', 0);
     }
+    this.state.isEditorDirty = false;
   }
 }
 

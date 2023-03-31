@@ -6,43 +6,57 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/asaskevich/govalidator"
-	"github.com/cloudogu/portainer-ce/api"
-	"github.com/cloudogu/portainer-ce/api/bolt/errors"
-	"github.com/gorilla/websocket"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/gorilla/websocket"
 )
 
-// websocketAttach handles GET requests on /websocket/attach?id=<attachID>&endpointId=<endpointID>&nodeName=<nodeName>&token=<token>
-// If the nodeName query parameter is present, the request will be proxied to the underlying agent endpoint.
-// If the nodeName query parameter is not specified, the request will be upgraded to the websocket protocol and
-// an AttachStart operation HTTP request will be created and hijacked.
-// Authentication and access is controled via the mandatory token query parameter.
+// @summary Attach a websocket
+// @description If the nodeName query parameter is present, the request will be proxied to the underlying agent environment(endpoint).
+// @description If the nodeName query parameter is not specified, the request will be upgraded to the websocket protocol and
+// @description an AttachStart operation HTTP request will be created and hijacked.
+// @description **Access policy**: authenticated
+// @security ApiKeyAuth
+// @security jwt
+// @tags websocket
+// @accept json
+// @produce json
+// @param endpointId query int true "environment(endpoint) ID of the environment(endpoint) where the resource is located"
+// @param nodeName query string false "node name"
+// @param token query string true "JWT token used for authentication against this environment(endpoint)"
+// @success 200
+// @failure 400
+// @failure 403
+// @failure 404
+// @failure 500
+// @router /websocket/attach [get]
 func (handler *Handler) websocketAttach(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	attachID, err := request.RetrieveQueryParameter(r, "id", false)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid query parameter: id", err}
+		return httperror.BadRequest("Invalid query parameter: id", err)
 	}
 	if !govalidator.IsHexadecimal(attachID) {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid query parameter: id (must be hexadecimal identifier)", err}
+		return httperror.BadRequest("Invalid query parameter: id (must be hexadecimal identifier)", err)
 	}
 
 	endpointID, err := request.RetrieveNumericQueryParameter(r, "endpointId", false)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid query parameter: endpointId", err}
+		return httperror.BadRequest("Invalid query parameter: endpointId", err)
 	}
 
 	endpoint, err := handler.DataStore.Endpoint().Endpoint(portainer.EndpointID(endpointID))
-	if err == errors.ErrObjectNotFound {
-		return &httperror.HandlerError{http.StatusNotFound, "Unable to find the endpoint associated to the stack inside the database", err}
+	if handler.DataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Unable to find the environment associated to the stack inside the database", err)
 	} else if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to find the endpoint associated to the stack inside the database", err}
+		return httperror.InternalServerError("Unable to find the environment associated to the stack inside the database", err)
 	}
 
 	err = handler.requestBouncer.AuthorizedEndpointOperation(r, endpoint)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusForbidden, "Permission denied to access endpoint", err}
+		return httperror.Forbidden("Permission denied to access environment", err)
 	}
 
 	params := &webSocketRequestParams{
@@ -53,7 +67,7 @@ func (handler *Handler) websocketAttach(w http.ResponseWriter, r *http.Request) 
 
 	err = handler.handleAttachRequest(w, r, params)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "An error occured during websocket attach operation", err}
+		return httperror.InternalServerError("An error occurred during websocket attach operation", err)
 	}
 
 	return nil
@@ -102,12 +116,7 @@ func hijackAttachStartOperation(websocketConn *websocket.Conn, endpoint *portain
 		return err
 	}
 
-	err = hijackRequest(websocketConn, httpConn, attachStartRequest)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return hijackRequest(websocketConn, httpConn, attachStartRequest)
 }
 
 func createAttachStartRequest(attachID string) (*http.Request, error) {

@@ -6,8 +6,7 @@ angular.module('portainer.docker').controller('HostViewController', [
   'AgentService',
   'ContainerService',
   'Authentication',
-  'EndpointProvider',
-  function HostViewController($q, SystemService, Notifications, StateManager, AgentService, ContainerService, Authentication, EndpointProvider) {
+  function HostViewController($q, SystemService, Notifications, StateManager, AgentService, ContainerService, Authentication) {
     var ctrl = this;
 
     this.$onInit = initView;
@@ -15,7 +14,6 @@ angular.module('portainer.docker').controller('HostViewController', [
     ctrl.state = {
       isAgent: false,
       isAdmin: false,
-      offlineMode: false,
     };
 
     this.engineDetails = {};
@@ -29,7 +27,7 @@ angular.module('portainer.docker').controller('HostViewController', [
       ctrl.state.isAdmin = Authentication.isAdmin();
       var agentApiVersion = applicationState.endpoint.agentApiVersion;
       ctrl.state.agentApiVersion = agentApiVersion;
-      ctrl.state.enableHostManagementFeatures = applicationState.application.enableHostManagementFeatures;
+      ctrl.state.enableHostManagementFeatures = ctrl.endpoint.SecuritySettings.enableHostManagementFeatures;
 
       $q.all({
         version: SystemService.version(),
@@ -39,11 +37,10 @@ angular.module('portainer.docker').controller('HostViewController', [
         .then(function success(data) {
           ctrl.engineDetails = buildEngineDetails(data);
           ctrl.hostDetails = buildHostDetails(data.info);
-          ctrl.state.offlineMode = EndpointProvider.offlineMode();
           ctrl.jobs = data.jobs;
 
-          if (ctrl.state.isAgent && agentApiVersion > 1) {
-            return AgentService.hostInfo(data.info.Hostname).then(function onHostInfoLoad(agentHostInfo) {
+          if (ctrl.state.isAgent && agentApiVersion > 1 && ctrl.state.enableHostManagementFeatures) {
+            return AgentService.hostInfo(ctrl.endpoint.Id).then(function onHostInfoLoad(agentHostInfo) {
               ctrl.devices = agentHostInfo.PCIDevices;
               ctrl.disks = agentHostInfo.PhysicalDisks;
             });

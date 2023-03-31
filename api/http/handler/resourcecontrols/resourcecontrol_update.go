@@ -4,8 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
-	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
 	httperrors "github.com/cloudogu/portainer-ce/api/http/errors"
 	"github.com/cloudogu/portainer-ce/api/http/security"
 	httperror "github.com/portainer/libhttp/error"
@@ -14,10 +13,14 @@ import (
 )
 
 type resourceControlUpdatePayload struct {
-	Public             bool
-	Users              []int
-	Teams              []int
-	AdministratorsOnly bool
+	// Permit access to the associated resource to any user
+	Public bool `example:"true"`
+	// List of user identifiers with access to the associated resource
+	Users []int `example:"4"`
+	// List of team identifiers with access to the associated resource
+	Teams []int `example:"7"`
+	// Permit access to resource only to admins
+	AdministratorsOnly bool `example:"true"`
 }
 
 func (payload *resourceControlUpdatePayload) Validate(r *http.Request) error {
@@ -31,33 +34,49 @@ func (payload *resourceControlUpdatePayload) Validate(r *http.Request) error {
 	return nil
 }
 
-// PUT request on /api/resource_controls/:id
+// @id ResourceControlUpdate
+// @summary Update a resource control
+// @description Update a resource control
+// @description **Access policy**: authenticated
+// @tags resource_controls
+// @security ApiKeyAuth
+// @security jwt
+// @accept json
+// @produce json
+// @param id path int true "Resource control identifier"
+// @param body body resourceControlUpdatePayload true "Resource control details"
+// @success 200 {object} portainer.ResourceControl "Success"
+// @failure 400 "Invalid request"
+// @failure 403 "Unauthorized"
+// @failure 404 "Resource control not found"
+// @failure 500 "Server error"
+// @router /resource_controls/{id} [put]
 func (handler *Handler) resourceControlUpdate(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	resourceControlID, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid resource control identifier route variable", err}
+		return httperror.BadRequest("Invalid resource control identifier route variable", err)
 	}
 
 	var payload resourceControlUpdatePayload
 	err = request.DecodeAndValidateJSONPayload(r, &payload)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid request payload", err}
+		return httperror.BadRequest("Invalid request payload", err)
 	}
 
 	resourceControl, err := handler.DataStore.ResourceControl().ResourceControl(portainer.ResourceControlID(resourceControlID))
-	if err == bolterrors.ErrObjectNotFound {
-		return &httperror.HandlerError{http.StatusNotFound, "Unable to find a resource control with the specified identifier inside the database", err}
+	if handler.DataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Unable to find a resource control with the specified identifier inside the database", err)
 	} else if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to find a resource control with with the specified identifier inside the database", err}
+		return httperror.InternalServerError("Unable to find a resource control with with the specified identifier inside the database", err)
 	}
 
 	securityContext, err := security.RetrieveRestrictedRequestContext(r)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to retrieve info from request context", err}
+		return httperror.InternalServerError("Unable to retrieve info from request context", err)
 	}
 
 	if !security.AuthorizedResourceControlAccess(resourceControl, securityContext) {
-		return &httperror.HandlerError{http.StatusForbidden, "Permission denied to access the resource control", httperrors.ErrResourceAccessDenied}
+		return httperror.Forbidden("Permission denied to access the resource control", httperrors.ErrResourceAccessDenied)
 	}
 
 	resourceControl.Public = payload.Public
@@ -84,12 +103,12 @@ func (handler *Handler) resourceControlUpdate(w http.ResponseWriter, r *http.Req
 	resourceControl.TeamAccesses = teamAccesses
 
 	if !security.AuthorizedResourceControlUpdate(resourceControl, securityContext) {
-		return &httperror.HandlerError{http.StatusForbidden, "Permission denied to update the resource control", httperrors.ErrResourceAccessDenied}
+		return httperror.Forbidden("Permission denied to update the resource control", httperrors.ErrResourceAccessDenied)
 	}
 
 	err = handler.DataStore.ResourceControl().UpdateResourceControl(resourceControl.ID, resourceControl)
 	if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to persist resource control changes inside the database", err}
+		return httperror.InternalServerError("Unable to persist resource control changes inside the database", err)
 	}
 
 	return response.JSON(w, resourceControl)

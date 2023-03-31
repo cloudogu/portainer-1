@@ -1,21 +1,17 @@
-<rd-header>
-  <rd-header-title title-text="Endpoints">
-    <a data-toggle="tooltip" title="Refresh" ui-sref="portainer.endpoints" ui-sref-opts="{reload: true}">
-      <i class="fa fa-sync" aria-hidden="true"></i>
-    </a>
-  </rd-header-title>
-  <rd-header-content>Endpoint management</rd-header-content>
-</rd-header>
+<page-header title="'Environments'" breadcrumbs="['Environment management']" reload="true"> </page-header>
 
-<div class="row">
+<view-loading ng-if="$ctrl.state.loadingMessage" message="$ctrl.state.loadingMessage"></view-loading>
+
+<div class="row" ng-if="!$ctrl.state.loadingMessage">
   <div class="col-sm-12">
     <endpoints-datatable
-      title-text="Endpoints"
-      title-icon="fa-plug"
-      table-key="endpoints"
+      title-text="Environments"
+      title-icon="hard-drive"
+      table-key="$ctrl.endpoints"
       order-by="Name"
-      remove-action="removeAction"
-      retrieve-page="getPaginatedEndpoints"
+      remove-action="$ctrl.removeAction"
+      retrieve-page="$ctrl.getPaginatedEndpoints"
+      set-loading-message="$ctr.setLoadingMessage"
     ></endpoints-datatable>
   </div>
 </div>

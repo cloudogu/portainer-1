@@ -1,14 +1,14 @@
-import { KubernetesConfigurationTypes } from 'Kubernetes/models/configuration/models';
-import { KubernetesConfigurationFormValuesEntry } from 'Kubernetes/models/configuration/formvalues';
 import _ from 'lodash-es';
 import YAML from 'yaml';
+import { KubernetesConfigurationKinds } from 'Kubernetes/models/configuration/models';
+import { KubernetesConfigurationFormValuesEntry } from 'Kubernetes/models/configuration/formvalues';
 
 class KubernetesConfigurationHelper {
   static getUsingApplications(config, applications) {
     return _.filter(applications, (app) => {
       let envFind;
       let volumeFind;
-      if (config.Type === KubernetesConfigurationTypes.CONFIGMAP) {
+      if (config.Kind === KubernetesConfigurationKinds.CONFIGMAP) {
         envFind = _.find(app.Env, { valueFrom: { configMapKeyRef: { name: config.Name } } });
         volumeFind = _.find(app.Volumes, { configMap: { name: config.Name } });
       } else {
@@ -36,6 +36,20 @@ class KubernetesConfigurationHelper {
       config.Applications = KubernetesConfigurationHelper.getUsingApplications(config, applications);
       KubernetesConfigurationHelper.setConfigurationUsed(config);
     });
+  }
+
+  static getApplicationConfigurations(applications, configurations) {
+    const configurationsUsed = configurations.filter((config) => KubernetesConfigurationHelper.getUsingApplications(config, applications).length !== 0);
+    // set the configurations used for each application in the list
+    const configuredApps = applications.map((app) => {
+      const configMappedByName = configurationsUsed.filter((config) => app.ApplicationName === config.Name && app.ResourcePool === config.Namespace);
+      const configMappedByVolume = configurationsUsed
+        .filter((config) => app.ConfigurationVolumes.some((cv) => cv.configurationName === config.Name))
+        .filter((config) => !configMappedByName.some((c) => c.Name === config.Name)); // filter out duplicates that are mapped by name
+      app.Configurations = [...configMappedByName, ...configMappedByVolume];
+      return app;
+    });
+    return configuredApps;
   }
 
   static parseYaml(formValues) {

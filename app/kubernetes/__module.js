@@ -1,4 +1,9 @@
-angular.module('portainer.kubernetes', ['portainer.app']).config([
+import registriesModule from './registries';
+import customTemplateModule from './custom-templates';
+import { reactModule } from './react';
+import './views/kubernetes.css';
+
+angular.module('portainer.kubernetes', ['portainer.app', registriesModule, customTemplateModule, reactModule]).config([
   '$stateRegistryProvider',
   function ($stateRegistryProvider) {
     'use strict';
@@ -9,7 +14,7 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
       parent: 'endpoint',
       abstract: true,
 
-      onEnter: /* @ngInject */ function onEnter($async, $state, endpoint, EndpointProvider, KubernetesHealthService, Notifications, StateManager) {
+      onEnter: /* @ngInject */ function onEnter($async, $state, endpoint, KubernetesHealthService, KubernetesNamespaceService, Notifications, StateManager) {
         return $async(async () => {
           if (![5, 6, 7].includes(endpoint.Type)) {
             $state.go('portainer.home');
@@ -17,6 +22,7 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
           }
           try {
             if (endpoint.Type === 7) {
+              //edge
               try {
                 await KubernetesHealthService.ping(endpoint.Id);
                 endpoint.Status = 1;
@@ -25,13 +31,68 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
               }
             }
 
-            EndpointProvider.setEndpointID(endpoint.Id);
-            await StateManager.updateEndpointState(endpoint, []);
+            await StateManager.updateEndpointState(endpoint);
+
+            if (endpoint.Type === 7 && endpoint.Status === 2) {
+              throw new Error('Unable to contact Edge agent, please ensure that the agent is properly running on the remote environment.');
+            }
+
+            await KubernetesNamespaceService.get();
           } catch (e) {
-            Notifications.error('Failed loading endpoint', e);
+            Notifications.error('Failed loading environment', e);
             $state.go('portainer.home', {}, { reload: true });
           }
         });
+      },
+    };
+
+    const helmApplication = {
+      name: 'kubernetes.helm',
+      url: '/helm/:namespace/:name',
+      views: {
+        'content@': {
+          component: 'kubernetesHelmApplicationView',
+        },
+      },
+    };
+
+    const helmTemplates = {
+      name: 'kubernetes.templates.helm',
+      url: '/helm',
+      views: {
+        'content@': {
+          component: 'helmTemplatesView',
+        },
+      },
+    };
+
+    const ingresses = {
+      name: 'kubernetes.ingresses',
+      url: '/ingresses',
+      views: {
+        'content@': {
+          component: 'kubernetesIngressesView',
+        },
+      },
+    };
+
+    const ingressesCreate = {
+      name: 'kubernetes.ingresses.create',
+      url: '/add',
+      views: {
+        'content@': {
+          component: 'kubernetesIngressesCreateView',
+        },
+      },
+    };
+
+    const ingressesEdit = {
+      name: 'kubernetes.ingresses.edit',
+      url: '/:namespace/:name/edit',
+      views: {
+        'content@': {
+          component: 'kubernetesIngressesCreateView',
+        },
       },
     };
 
@@ -91,6 +152,16 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
       views: {
         'content@': {
           component: 'kubernetesApplicationLogsView',
+        },
+      },
+    };
+
+    const applicationStats = {
+      name: 'kubernetes.applications.application.stats',
+      url: '/:pod/:container/stats',
+      views: {
+        'content@': {
+          component: 'kubernetesApplicationStatsView',
         },
       },
     };
@@ -167,6 +238,16 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
       },
     };
 
+    const nodeStats = {
+      name: 'kubernetes.cluster.node.stats',
+      url: '/stats',
+      views: {
+        'content@': {
+          component: 'kubernetesNodeStatsView',
+        },
+      },
+    };
+
     const dashboard = {
       name: 'kubernetes.dashboard',
       url: '/dashboard',
@@ -179,11 +260,14 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
 
     const deploy = {
       name: 'kubernetes.deploy',
-      url: '/deploy',
+      url: '/deploy?templateId',
       views: {
         'content@': {
           component: 'kubernetesDeployView',
         },
+      },
+      params: {
+        templateId: '',
       },
     };
 
@@ -247,13 +331,59 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
       },
     };
 
+    const registries = {
+      name: 'kubernetes.registries',
+      url: '/registries',
+      views: {
+        'content@': {
+          component: 'endpointRegistriesView',
+        },
+      },
+    };
+
+    const registriesAccess = {
+      name: 'kubernetes.registries.access',
+      url: '/:id/access',
+      views: {
+        'content@': {
+          component: 'kubernetesRegistryAccessView',
+        },
+      },
+    };
+
+    const endpointKubernetesConfiguration = {
+      name: 'kubernetes.cluster.setup',
+      url: '/configure',
+      views: {
+        'content@': {
+          templateUrl: './views/configure/configure.html',
+          controller: 'KubernetesConfigureController',
+          controllerAs: 'ctrl',
+        },
+      },
+    };
+
+    const endpointKubernetesSecurityConstraint = {
+      name: 'kubernetes.cluster.securityConstraint',
+      url: '/securityConstraint',
+      views: {
+        'content@': {
+          templateUrl: '../kubernetes/views/security-constraint/constraint.html',
+          controller: 'KubernetesSecurityConstraintController',
+        },
+      },
+    };
+
     $stateRegistryProvider.register(kubernetes);
+    $stateRegistryProvider.register(helmApplication);
+    $stateRegistryProvider.register(helmTemplates);
     $stateRegistryProvider.register(applications);
     $stateRegistryProvider.register(applicationCreation);
     $stateRegistryProvider.register(application);
     $stateRegistryProvider.register(applicationEdit);
     $stateRegistryProvider.register(applicationConsole);
     $stateRegistryProvider.register(applicationLogs);
+    $stateRegistryProvider.register(applicationStats);
     $stateRegistryProvider.register(stacks);
     $stateRegistryProvider.register(stack);
     $stateRegistryProvider.register(stackLogs);
@@ -264,11 +394,20 @@ angular.module('portainer.kubernetes', ['portainer.app']).config([
     $stateRegistryProvider.register(dashboard);
     $stateRegistryProvider.register(deploy);
     $stateRegistryProvider.register(node);
+    $stateRegistryProvider.register(nodeStats);
     $stateRegistryProvider.register(resourcePools);
     $stateRegistryProvider.register(resourcePoolCreation);
     $stateRegistryProvider.register(resourcePool);
     $stateRegistryProvider.register(resourcePoolAccess);
     $stateRegistryProvider.register(volumes);
     $stateRegistryProvider.register(volume);
+    $stateRegistryProvider.register(registries);
+    $stateRegistryProvider.register(registriesAccess);
+    $stateRegistryProvider.register(endpointKubernetesConfiguration);
+    $stateRegistryProvider.register(endpointKubernetesSecurityConstraint);
+
+    $stateRegistryProvider.register(ingresses);
+    $stateRegistryProvider.register(ingressesCreate);
+    $stateRegistryProvider.register(ingressesEdit);
   },
 ]);

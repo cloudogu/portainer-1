@@ -3,7 +3,8 @@ package edgejobs
 import (
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
 	"github.com/cloudogu/portainer-ce/api/http/security"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
@@ -12,7 +13,7 @@ import (
 // Handler is the HTTP handler used to handle Edge job operations.
 type Handler struct {
 	*mux.Router
-	DataStore            portainer.DataStore
+	DataStore            dataservices.DataStore
 	FileService          portainer.FileService
 	ReverseTunnelService portainer.ReverseTunnelService
 }
@@ -44,4 +45,14 @@ func NewHandler(bouncer *security.RequestBouncer) *Handler {
 	h.Handle("/edge_jobs/{id}/tasks/{taskID}/logs",
 		bouncer.AdminAccess(bouncer.EdgeComputeOperation(httperror.LoggerHandler(h.edgeJobTasksClear)))).Methods(http.MethodDelete)
 	return h
+}
+
+func convertEndpointsToMetaObject(endpoints []portainer.EndpointID) map[portainer.EndpointID]portainer.EdgeJobEndpointMeta {
+	endpointsMap := map[portainer.EndpointID]portainer.EdgeJobEndpointMeta{}
+
+	for _, endpointID := range endpoints {
+		endpointsMap[endpointID] = portainer.EdgeJobEndpointMeta{}
+	}
+
+	return endpointsMap
 }

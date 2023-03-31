@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
-	bolterrors "github.com/cloudogu/portainer-ce/api/bolt/errors"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/internal/edge"
+	"github.com/cloudogu/portainer-ce/api/internal/maps"
 	httperror "github.com/portainer/libhttp/error"
 	"github.com/portainer/libhttp/request"
 	"github.com/portainer/libhttp/response"
@@ -17,31 +18,53 @@ type taskContainer struct {
 	LogsStatus portainer.EdgeJobLogsStatus `json:"LogsStatus"`
 }
 
-// GET request on /api/edge_jobs/:id/tasks
+// @id EdgeJobTasksList
+// @summary Fetch the list of tasks on an EdgeJob
+// @description **Access policy**: administrator
+// @tags edge_jobs
+// @security ApiKeyAuth
+// @security jwt
+// @produce json
+// @param id path string true "EdgeJob Id"
+// @success 200 {array} taskContainer
+// @failure 500
+// @failure 400
+// @failure 503 "Edge compute features are disabled"
+// @router /edge_jobs/{id}/tasks [get]
 func (handler *Handler) edgeJobTasksList(w http.ResponseWriter, r *http.Request) *httperror.HandlerError {
 	edgeJobID, err := request.RetrieveNumericRouteVariableValue(r, "id")
 	if err != nil {
-		return &httperror.HandlerError{http.StatusBadRequest, "Invalid Edge job identifier route variable", err}
+		return httperror.BadRequest("Invalid Edge job identifier route variable", err)
 	}
 
 	edgeJob, err := handler.DataStore.EdgeJob().EdgeJob(portainer.EdgeJobID(edgeJobID))
-	if err == bolterrors.ErrObjectNotFound {
-		return &httperror.HandlerError{http.StatusNotFound, "Unable to find an Edge job with the specified identifier inside the database", err}
+	if handler.DataStore.IsErrObjectNotFound(err) {
+		return httperror.NotFound("Unable to find an Edge job with the specified identifier inside the database", err)
 	} else if err != nil {
-		return &httperror.HandlerError{http.StatusInternalServerError, "Unable to find an Edge job with the specified identifier inside the database", err}
+		return httperror.InternalServerError("Unable to find an Edge job with the specified identifier inside the database", err)
 	}
 
 	tasks := make([]taskContainer, 0)
 
-	for endpointID, meta := range edgeJob.Endpoints {
+	endpointsMap := map[portainer.EndpointID]portainer.EdgeJobEndpointMeta{}
+	if len(edgeJob.EdgeGroups) > 0 {
+		endpoints, err := edge.GetEndpointsFromEdgeGroups(edgeJob.EdgeGroups, handler.DataStore)
+		if err != nil {
+			return httperror.InternalServerError("Unable to get Endpoints from EdgeGroups", err)
+		}
 
-		cronTask := taskContainer{
+		endpointsMap = convertEndpointsToMetaObject(endpoints)
+		maps.Copy(endpointsMap, edgeJob.GroupLogsCollection)
+	}
+
+	maps.Copy(endpointsMap, edgeJob.Endpoints)
+
+	for endpointID, meta := range endpointsMap {
+		tasks = append(tasks, taskContainer{
 			ID:         fmt.Sprintf("edgejob_task_%d_%d", edgeJob.ID, endpointID),
 			EndpointID: endpointID,
 			LogsStatus: meta.LogsStatus,
-		}
-
-		tasks = append(tasks, cronTask)
+		})
 	}
 
 	return response.JSON(w, tasks)

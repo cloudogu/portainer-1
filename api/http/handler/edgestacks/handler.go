@@ -1,29 +1,39 @@
 package edgestacks
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/cloudogu/portainer-ce/api"
+	portainer "github.com/cloudogu/portainer-ce/api"
+	"github.com/cloudogu/portainer-ce/api/dataservices"
+	"github.com/cloudogu/portainer-ce/api/filesystem"
+	"github.com/cloudogu/portainer-ce/api/http/middlewares"
 	"github.com/cloudogu/portainer-ce/api/http/security"
+	edgestackservice "github.com/cloudogu/portainer-ce/api/internal/edge/edgestacks"
 	"github.com/gorilla/mux"
 	httperror "github.com/portainer/libhttp/error"
 )
 
-// Handler is the HTTP handler used to handle endpoint group operations.
+// Handler is the HTTP handler used to handle environment(endpoint) group operations.
 type Handler struct {
 	*mux.Router
-	requestBouncer *security.RequestBouncer
-	DataStore      portainer.DataStore
-	FileService    portainer.FileService
-	GitService     portainer.GitService
+	requestBouncer     *security.RequestBouncer
+	DataStore          dataservices.DataStore
+	FileService        portainer.FileService
+	GitService         portainer.GitService
+	edgeStacksService  *edgestackservice.Service
+	KubernetesDeployer portainer.KubernetesDeployer
 }
 
-// NewHandler creates a handler to manage endpoint group operations.
-func NewHandler(bouncer *security.RequestBouncer) *Handler {
+// NewHandler creates a handler to manage environment(endpoint) group operations.
+func NewHandler(bouncer *security.RequestBouncer, dataStore dataservices.DataStore, edgeStacksService *edgestackservice.Service) *Handler {
 	h := &Handler{
-		Router:         mux.NewRouter(),
-		requestBouncer: bouncer,
+		Router:            mux.NewRouter(),
+		requestBouncer:    bouncer,
+		DataStore:         dataStore,
+		edgeStacksService: edgeStacksService,
 	}
+
 	h.Handle("/edge_stacks",
 		bouncer.AdminAccess(bouncer.EdgeComputeOperation(httperror.LoggerHandler(h.edgeStackCreate)))).Methods(http.MethodPost)
 	h.Handle("/edge_stacks",
@@ -38,5 +48,50 @@ func NewHandler(bouncer *security.RequestBouncer) *Handler {
 		bouncer.AdminAccess(bouncer.EdgeComputeOperation(httperror.LoggerHandler(h.edgeStackFile)))).Methods(http.MethodGet)
 	h.Handle("/edge_stacks/{id}/status",
 		bouncer.PublicAccess(httperror.LoggerHandler(h.edgeStackStatusUpdate))).Methods(http.MethodPut)
+
+	edgeStackStatusRouter := h.NewRoute().Subrouter()
+	edgeStackStatusRouter.Use(middlewares.WithEndpoint(h.DataStore.Endpoint(), "endpoint_id"))
+
+	edgeStackStatusRouter.PathPrefix("/edge_stacks/{id}/status/{endpoint_id}").Handler(bouncer.PublicAccess(httperror.LoggerHandler(h.edgeStackStatusDelete))).Methods(http.MethodDelete)
+
 	return h
+}
+
+func (handler *Handler) convertAndStoreKubeManifestIfNeeded(stackFolder string, projectPath, composePath string, relatedEndpointIds []portainer.EndpointID) (manifestPath string, err error) {
+	hasKubeEndpoint, err := hasKubeEndpoint(handler.DataStore.Endpoint(), relatedEndpointIds)
+	if err != nil {
+		return "", fmt.Errorf("unable to check if edge stack has kube environments: %w", err)
+	}
+
+	if !hasKubeEndpoint {
+		return "", nil
+	}
+
+	composeConfig, err := handler.FileService.GetFileContent(projectPath, composePath)
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve Compose file from disk: %w", err)
+	}
+
+	kompose, err := handler.KubernetesDeployer.ConvertCompose(composeConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed converting compose file to kubernetes manifest: %w", err)
+	}
+
+	komposeFileName := filesystem.ManifestFileDefaultName
+	_, err = handler.FileService.StoreEdgeStackFileFromBytes(stackFolder, komposeFileName, kompose)
+	if err != nil {
+		return "", fmt.Errorf("failed to store kube manifest file: %w", err)
+	}
+
+	return komposeFileName, nil
+}
+
+func (handler *Handler) handlerDBErr(err error, msg string) *httperror.HandlerError {
+	httpErr := httperror.InternalServerError(msg, err)
+
+	if handler.DataStore.IsErrObjectNotFound(err) {
+		httpErr.StatusCode = http.StatusNotFound
+	}
+
+	return httpErr
 }

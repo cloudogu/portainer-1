@@ -1,6 +1,8 @@
 import angular from 'angular';
 import _ from 'lodash-es';
 import KubernetesConfigurationHelper from 'Kubernetes/helpers/configurationHelper';
+import KubernetesNamespaceHelper from 'Kubernetes/helpers/namespaceHelper';
+import { PortainerEndpointTypes } from 'Portainer/models/endpoint/models';
 
 class KubernetesDashboardController {
   /* @ngInject */
@@ -8,24 +10,20 @@ class KubernetesDashboardController {
     $async,
     Notifications,
     EndpointService,
-    EndpointProvider,
     KubernetesResourcePoolService,
     KubernetesApplicationService,
     KubernetesConfigurationService,
     KubernetesVolumeService,
-    KubernetesNamespaceHelper,
     Authentication,
     TagService
   ) {
     this.$async = $async;
     this.Notifications = Notifications;
     this.EndpointService = EndpointService;
-    this.EndpointProvider = EndpointProvider;
     this.KubernetesResourcePoolService = KubernetesResourcePoolService;
     this.KubernetesApplicationService = KubernetesApplicationService;
     this.KubernetesConfigurationService = KubernetesConfigurationService;
     this.KubernetesVolumeService = KubernetesVolumeService;
-    this.KubernetesNamespaceHelper = KubernetesNamespaceHelper;
     this.Authentication = Authentication;
     this.TagService = TagService;
 
@@ -36,18 +34,17 @@ class KubernetesDashboardController {
 
   async getAllAsync() {
     const isAdmin = this.Authentication.isAdmin();
+    const storageClasses = this.endpoint.Kubernetes.Configuration.StorageClasses;
+    this.showEnvUrl = this.endpoint.Type !== PortainerEndpointTypes.EdgeAgentOnDockerEnvironment && this.endpoint.Type !== PortainerEndpointTypes.EdgeAgentOnKubernetesEnvironment;
 
     try {
-      const endpointId = this.EndpointProvider.endpointID();
-      const [endpoint, pools, applications, configurations, volumes, tags] = await Promise.all([
-        this.EndpointService.endpoint(endpointId),
+      const [pools, applications, configurations, volumes, tags] = await Promise.all([
         this.KubernetesResourcePoolService.get(),
         this.KubernetesApplicationService.get(),
         this.KubernetesConfigurationService.get(),
-        this.KubernetesVolumeService.get(),
+        this.KubernetesVolumeService.get(undefined, storageClasses),
         this.TagService.tags(),
       ]);
-      this.endpoint = endpoint;
       this.applications = applications;
       this.volumes = volumes;
 
@@ -65,13 +62,8 @@ class KubernetesDashboardController {
         : '-';
 
       if (!isAdmin) {
-        this.pools = _.filter(pools, (pool) => {
-          return !this.KubernetesNamespaceHelper.isSystemNamespace(pool.Namespace.Name);
-        });
-
-        this.configurations = _.filter(configurations, (config) => {
-          return !KubernetesConfigurationHelper.isSystemToken(config);
-        });
+        this.pools = _.filter(pools, (pool) => !KubernetesNamespaceHelper.isSystemNamespace(pool.Namespace.Name));
+        this.configurations = _.filter(configurations, (config) => !KubernetesConfigurationHelper.isSystemToken(config));
       } else {
         this.pools = pools;
         this.configurations = configurations;

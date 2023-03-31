@@ -6,17 +6,14 @@ angular.module('portainer.app').factory('EndpointService', [
   'FileUploadService',
   function EndpointServiceFactory($q, Endpoints, FileUploadService) {
     'use strict';
-    var service = {};
+    var service = {
+      updateSecuritySettings,
+      registries,
+      updateRegistryAccess,
+    };
 
     service.endpoint = function (endpointID) {
       return Endpoints.get({ id: endpointID }).$promise;
-    };
-
-    service.endpoints = function (start, limit, { search, type, tagIds, endpointIds, tagsPartialMatch } = {}) {
-      if (tagIds && !tagIds.length) {
-        return Promise.resolve({ value: [], totalCount: 0 });
-      }
-      return Endpoints.query({ start, limit, search, type, tagIds: JSON.stringify(tagIds), endpointIds: JSON.stringify(endpointIds), tagsPartialMatch }).$promise;
     };
 
     service.snapshotEndpoints = function () {
@@ -27,12 +24,12 @@ angular.module('portainer.app').factory('EndpointService', [
       return Endpoints.snapshot({ id: endpointID }, {}).$promise;
     };
 
-    service.endpointsByGroup = function (start, limit, search, groupId) {
-      return Endpoints.query({ start, limit, search, groupId }).$promise;
-    };
-
     service.updateAccess = function (id, userAccessPolicies, teamAccessPolicies) {
       return Endpoints.updateAccess({ id: id }, { UserAccessPolicies: userAccessPolicies, TeamAccessPolicies: teamAccessPolicies }).$promise;
+    };
+
+    service.disassociateEndpoint = function (endpointID) {
+      return Endpoints.disassociate({ id: endpointID }).$promise;
     };
 
     service.updateEndpoint = function (id, payload) {
@@ -47,7 +44,7 @@ angular.module('portainer.app').factory('EndpointService', [
         })
         .catch(function error(err) {
           deferred.notify({ upload: false });
-          deferred.reject({ msg: 'Unable to update endpoint', err: err });
+          deferred.reject({ msg: 'Unable to update environment', err: err });
         });
       return deferred.promise;
     };
@@ -56,15 +53,25 @@ angular.module('portainer.app').factory('EndpointService', [
       return Endpoints.remove({ id: endpointID }).$promise;
     };
 
-    service.createLocalEndpoint = function (name = 'local') {
+    service.createLocalEndpoint = function (name = 'local', URL = '', PublicURL = '', groupID = 1, tagIds = []) {
       var deferred = $q.defer();
 
-      FileUploadService.createEndpoint(name, PortainerEndpointCreationTypes.LocalDockerEnvironment, '', '', 1, [], false)
+      var endpointURL = URL;
+      if (endpointURL !== '') {
+        if (endpointURL.indexOf('//./pipe/') == 0) {
+          // Windows named pipe
+          endpointURL = 'npipe://' + URL;
+        } else {
+          endpointURL = 'unix://' + URL;
+        }
+      }
+
+      FileUploadService.createEndpoint(name, PortainerEndpointCreationTypes.LocalDockerEnvironment, endpointURL, PublicURL, groupID, tagIds, false)
         .then(function success(response) {
           deferred.resolve(response.data);
         })
         .catch(function error(err) {
-          deferred.reject({ msg: 'Unable to create endpoint', err: err });
+          deferred.reject({ msg: 'Unable to create environment', err: err });
         });
 
       return deferred.promise;
@@ -83,7 +90,8 @@ angular.module('portainer.app').factory('EndpointService', [
       TLSCAFile,
       TLSCertFile,
       TLSKeyFile,
-      checkinInterval
+      checkinInterval,
+      isEdgeDevice
     ) {
       var deferred = $q.defer();
 
@@ -105,27 +113,28 @@ angular.module('portainer.app').factory('EndpointService', [
         TLSCAFile,
         TLSCertFile,
         TLSKeyFile,
-        checkinInterval
+        checkinInterval,
+        isEdgeDevice
       )
         .then(function success(response) {
           deferred.resolve(response.data);
         })
         .catch(function error(err) {
-          deferred.reject({ msg: 'Unable to create endpoint', err: err });
+          deferred.reject({ msg: 'Unable to create environment', err: err });
         });
 
       return deferred.promise;
     };
 
-    service.createLocalKubernetesEndpoint = function (name = 'local') {
+    service.createLocalKubernetesEndpoint = function (name = 'local', tagIds = []) {
       var deferred = $q.defer();
 
-      FileUploadService.createEndpoint(name, PortainerEndpointCreationTypes.LocalKubernetesEnvironment, '', '', 1, [], true, true, true)
+      FileUploadService.createEndpoint(name, PortainerEndpointCreationTypes.LocalKubernetesEnvironment, '', '', 1, tagIds, true, true, true)
         .then(function success(response) {
           deferred.resolve(response.data);
         })
         .catch(function error(err) {
-          deferred.reject({ msg: 'Unable to create endpoint', err: err });
+          deferred.reject({ msg: 'Unable to create environment', err: err });
         });
 
       return deferred.promise;
@@ -145,6 +154,22 @@ angular.module('portainer.app').factory('EndpointService', [
       return deferred.promise;
     };
 
+    service.trust = function (id) {
+      Endpoints.updateEndpoint({ id }, { UserTrusted: true }).$promise;
+    };
+
+    function updateRegistryAccess(id, registryId, endpointAccesses) {
+      return Endpoints.updateRegistryAccess({ registryId, id }, endpointAccesses).$promise;
+    }
+
+    function registries(id, namespace) {
+      return Endpoints.registries({ namespace, id }).$promise;
+    }
+
     return service;
+
+    function updateSecuritySettings(id, securitySettings) {
+      return Endpoints.updateSecuritySettings({ id }, securitySettings).$promise;
+    }
   },
 ]);
