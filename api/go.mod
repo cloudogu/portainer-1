@@ -18,7 +18,7 @@ require (
 	github.com/fvbommel/sortorder v1.0.2
 	github.com/fxamacker/cbor/v2 v2.3.0
 	github.com/g07cha/defender v0.0.0-20180505193036-5665c627c814
-	github.com/go-git/go-git/v5 v5.3.0
+	github.com/go-git/go-git/v5 v5.11.0
 	github.com/go-ldap/ldap/v3 v3.1.8
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang-jwt/jwt/v4 v4.2.0
